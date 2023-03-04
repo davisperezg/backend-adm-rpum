@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { Menu, MenuSchema } from 'src/menu/schemas/menu.schema';
 import { MenuService } from 'src/menu/services/menu.service';
+import { ModuleModule } from 'src/module/module.module';
 import {
   ModuleSchema,
   Module as ModuleEntity,
@@ -27,29 +29,33 @@ import { ServicesUsersService } from 'src/services-users/services/services-users
 import { User, UserSchema } from 'src/user/schemas/user.schema';
 import { UserService } from 'src/user/services/user.service';
 import { RoleController } from './controllers/role.controller';
+import { RolEntity } from './entity/rol.entity';
 import { Role, RoleSchema } from './schemas/role.schema';
 import { RoleService } from './services/role.service';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: Role.name, schema: RoleSchema },
-      { name: Resource_User.name, schema: Resource_UserSchema },
-      { name: Resource_Role.name, schema: Resource_RoleSchema },
-      { name: User.name, schema: UserSchema },
-      { name: Services_User.name, schema: ServicesUserSchema },
-      { name: CopyServices_User.name, schema: CopyServicesSchema },
-      { name: ModuleEntity.name, schema: ModuleSchema },
-      { name: Menu.name, schema: MenuSchema },
-    ]),
+    // MongooseModule.forFeature([
+    //   { name: Role.name, schema: RoleSchema },
+    //   { name: Resource_User.name, schema: Resource_UserSchema },
+    //   { name: Resource_Role.name, schema: Resource_RoleSchema },
+    //   { name: User.name, schema: UserSchema },
+    //   { name: Services_User.name, schema: ServicesUserSchema },
+    //   { name: CopyServices_User.name, schema: CopyServicesSchema },
+    //   { name: ModuleEntity.name, schema: ModuleSchema },
+    //   { name: Menu.name, schema: MenuSchema },
+    // ]),
+    TypeOrmModule.forFeature([RolEntity]),
+    ModuleModule,
   ],
   controllers: [RoleController],
   providers: [
     RoleService,
-    ModuleService,
-    MenuService,
-    ServicesUsersService,
-    UserService,
+    // ModuleService,
+    // MenuService,
+    // ServicesUsersService,
+    // UserService,
   ],
+  exports: [RoleService],
 })
 export class RoleModule {}

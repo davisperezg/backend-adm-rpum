@@ -26,27 +26,33 @@ import {
   Services_User,
 } from 'src/services-users/schemas/services-user';
 import { ServicesUsersService } from 'src/services-users/services/services-users.service';
+import { ModuloEntity } from './entity/modulo.entity';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { MenuModule } from 'src/menu/menu.module';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: ModuleEntity.name, schema: ModuleSchema },
-      { name: Role.name, schema: RoleSchema },
-      { name: Menu.name, schema: MenuSchema },
-      { name: CopyServices_User.name, schema: CopyServicesSchema },
-      { name: Services_User.name, schema: ServicesUserSchema },
-      { name: User.name, schema: UserSchema },
-      { name: Resource_User.name, schema: Resource_UserSchema },
-      { name: Resource_Role.name, schema: Resource_RoleSchema },
-    ]),
+    // MongooseModule.forFeature([
+    //   { name: ModuleEntity.name, schema: ModuleSchema },
+    //   { name: Role.name, schema: RoleSchema },
+    //   { name: Menu.name, schema: MenuSchema },
+    //   { name: CopyServices_User.name, schema: CopyServicesSchema },
+    //   { name: Services_User.name, schema: ServicesUserSchema },
+    //   { name: User.name, schema: UserSchema },
+    //   { name: Resource_User.name, schema: Resource_UserSchema },
+    //   { name: Resource_Role.name, schema: Resource_RoleSchema },
+    // ]),
+    TypeOrmModule.forFeature([ModuloEntity]),
+    MenuModule,
   ],
   controllers: [ModuleController],
   providers: [
     ModuleService,
-    MenuService,
-    ServicesUsersService,
-    UserService,
-    RoleService,
+    // MenuService,
+    // ServicesUsersService,
+    // UserService,
+    // RoleService,
   ],
+  exports: [ModuleService],
 })
 export class ModuleModule {}

@@ -12,6 +12,12 @@ import { ResourcesUsersModule } from './resources-users/resources-users.module';
 import { ServicesUsersModule } from './services-users/services-users.module';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ValidationErrorFilter } from './lib/class-validator/validation-error.filter';
+import { APP_FILTER } from '@nestjs/core';
+import { UserEntity } from './user/enitty/user.entity';
+import { RolEntity } from './role/entity/rol.entity';
+import { ModuloEntity } from './module/entity/modulo.entity';
+import { MenuEntity } from './menu/entity/menu.entity';
 
 @Module({
   imports: [
@@ -27,21 +33,30 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       username: process.env.USER_DATABASE,
       password: process.env.PASSWORD_DATABASE,
       database: process.env.NAME_DATABASE,
-      entities: [],
-      synchronize: true, //No usar en produccion
+      synchronize: process.env.NODE_ENV == 'development' ? true : false,
       retryAttempts: 3,
+      autoLoadEntities: true,
+      logging: ['error', 'warn', 'info'],
+      maxQueryExecutionTime: 1000,
     } as any),
-    // UserModule,
-    // RoleModule,
+    UserModule,
+    RoleModule,
     // ResourceModule,
-    // MenuModule,
-    // ModuleModule,
+    //MenuModule,
+    ModuleModule,
     // AuthModule,
     // ResourcesRolesModule,
     // ResourcesUsersModule,
     // ServicesUsersModule,
+    TypeOrmModule.forFeature([UserEntity, RolEntity, ModuloEntity, MenuEntity]),
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_FILTER,
+      useClass: ValidationErrorFilter,
+    },
+  ],
 })
 export class AppModule {}
