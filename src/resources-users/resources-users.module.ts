@@ -33,30 +33,35 @@ import {
 import { MenuService } from 'src/menu/services/menu.service';
 import { Menu, MenuSchema } from 'src/menu/schemas/menu.schema';
 import { ServicesUsersService } from 'src/services-users/services/services-users.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { PermisosUserEntity } from './entity/recursos-users.entity';
+import { AuxPermisosUserEntity } from './entity/cp-recursos.user.entity';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: Resource_User.name, schema: Resource_UserSchema },
-      { name: CopyResource_User.name, schema: CopyResource_UserSchema },
-      { name: Resource.name, schema: ResourceSchema },
-      { name: Role.name, schema: RoleSchema },
-      { name: User.name, schema: UserSchema },
-      { name: Resource_Role.name, schema: Resource_RoleSchema },
-      { name: Services_User.name, schema: ServicesUserSchema },
-      { name: CopyServices_User.name, schema: CopyServicesSchema },
-      { name: ModuleEntity.name, schema: ModuleSchema },
-      { name: Menu.name, schema: MenuSchema },
-    ]),
+    TypeOrmModule.forFeature([PermisosUserEntity, AuxPermisosUserEntity]),
+
+    // MongooseModule.forFeature([
+    //   { name: Resource_User.name, schema: Resource_UserSchema },
+    //   { name: CopyResource_User.name, schema: CopyResource_UserSchema },
+    //   { name: Resource.name, schema: ResourceSchema },
+    //   { name: Role.name, schema: RoleSchema },
+    //   { name: User.name, schema: UserSchema },
+    //   { name: Resource_Role.name, schema: Resource_RoleSchema },
+    //   { name: Services_User.name, schema: ServicesUserSchema },
+    //   { name: CopyServices_User.name, schema: CopyServicesSchema },
+    //   { name: ModuleEntity.name, schema: ModuleSchema },
+    //   { name: Menu.name, schema: MenuSchema },
+    // ]),
   ],
   providers: [
     ResourcesUsersService,
-    ResourceService,
-    RoleService,
-    UserService,
-    ModuleService,
-    MenuService,
-    ServicesUsersService,
+    // ResourceService,
+    // RoleService,
+    // UserService,
+    // ModuleService,
+    // MenuService,
+    // ServicesUsersService,
   ],
   controllers: [ResourcesUsersController],
 })

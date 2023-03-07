@@ -9,15 +9,19 @@ import {
 } from 'src/resources-roles/schemas/resources-role';
 import { Role, RoleSchema } from 'src/role/schemas/role.schema';
 import { User, UserSchema } from 'src/user/schemas/user.schema';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { PermisosEntity } from './entity/permisos.entity';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: Resource.name, schema: ResourceSchema },
-      { name: Resource_Role.name, schema: Resource_RoleSchema },
-      { name: Role.name, schema: RoleSchema },
-      { name: User.name, schema: UserSchema },
-    ]),
+    TypeOrmModule.forFeature([PermisosEntity]),
+
+    // MongooseModule.forFeature([
+    //   { name: Resource.name, schema: ResourceSchema },
+    //   { name: Resource_Role.name, schema: Resource_RoleSchema },
+    //   { name: Role.name, schema: RoleSchema },
+    //   { name: User.name, schema: UserSchema },
+    // ]),
   ],
   controllers: [ResourceController],
   providers: [ResourceService],

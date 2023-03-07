@@ -1,10 +1,17 @@
 import { ModuloEntity } from 'src/module/entity/modulo.entity';
+import { AuxPermisosUserEntity } from 'src/resources-users/entity/cp-recursos.user.entity';
+import { PermisosUserEntity } from 'src/resources-users/entity/recursos-users.entity';
 import { RolEntity } from 'src/role/entity/rol.entity';
+import { AuxServicesUserEntity } from 'src/services-users/entity/cp-servicios.user.entity';
+import { ServicesUserEntity } from 'src/services-users/entity/servicios-user.entity';
 import {
   Column,
   Entity,
   JoinColumn,
+  JoinTable,
+  ManyToMany,
   ManyToOne,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -93,4 +100,20 @@ export class UserEntity {
   @OneToOne(() => UserEntity, { nullable: true })
   @JoinColumn({ name: 'user_update' })
   user_update?: UserEntity;
+
+  //Referencia a user x services_users
+  @OneToMany(() => ServicesUserEntity, (service) => service.user)
+  users_service?: ServicesUserEntity[];
+
+  //Referencia a user x aux_services_users
+  @OneToMany(() => AuxServicesUserEntity, (service) => service.user)
+  aux_users_service?: AuxServicesUserEntity[];
+
+  //Referencia a user x permisos_users
+  @OneToMany(() => PermisosUserEntity, (service) => service.user)
+  users_permiso?: PermisosUserEntity[];
+
+  //Referencia a user x aux_permisos_users
+  @OneToMany(() => AuxPermisosUserEntity, (service) => service.user)
+  aux_users_permiso?: AuxPermisosUserEntity[];
 }

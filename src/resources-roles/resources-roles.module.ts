@@ -33,30 +33,33 @@ import { MenuService } from 'src/menu/services/menu.service';
 import { ServicesUsersService } from 'src/services-users/services/services-users.service';
 import { UserService } from 'src/user/services/user.service';
 import { Menu, MenuSchema } from 'src/menu/schemas/menu.schema';
+import { PermisosRolEntity } from './entity/recursos-roles.entity';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: Resource_Role.name, schema: Resource_RoleSchema },
-      { name: Role.name, schema: RoleSchema },
-      { name: Resource.name, schema: ResourceSchema },
-      { name: Resource_User.name, schema: Resource_UserSchema },
-      { name: User.name, schema: UserSchema },
-      { name: CopyResource_User.name, schema: CopyResource_UserSchema },
-      { name: Services_User.name, schema: ServicesUserSchema },
-      { name: CopyServices_User.name, schema: CopyServicesSchema },
-      { name: ModuleEntity.name, schema: ModuleSchema },
-      { name: Menu.name, schema: MenuSchema },
-    ]),
+    TypeOrmModule.forFeature([PermisosRolEntity]),
+    // MongooseModule.forFeature([
+    //   { name: Resource_Role.name, schema: Resource_RoleSchema },
+    //   { name: Role.name, schema: RoleSchema },
+    //   { name: Resource.name, schema: ResourceSchema },
+    //   { name: Resource_User.name, schema: Resource_UserSchema },
+    //   { name: User.name, schema: UserSchema },
+    //   { name: CopyResource_User.name, schema: CopyResource_UserSchema },
+    //   { name: Services_User.name, schema: ServicesUserSchema },
+    //   { name: CopyServices_User.name, schema: CopyServicesSchema },
+    //   { name: ModuleEntity.name, schema: ModuleSchema },
+    //   { name: Menu.name, schema: MenuSchema },
+    // ]),
   ],
   providers: [
     ResourcesRolesService,
-    RoleService,
-    ResourceService,
-    ModuleService,
-    MenuService,
-    ServicesUsersService,
-    UserService,
+    // RoleService,
+    // ResourceService,
+    // ModuleService,
+    // MenuService,
+    // ServicesUsersService,
+    // UserService,
   ],
   controllers: [ResourcesRolesController],
 })

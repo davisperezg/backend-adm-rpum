@@ -14,199 +14,211 @@ import { Resource, ResourceDocument } from '../schemas/resource.schema';
 import { Model, Types } from 'mongoose';
 import { resourcesByDefault } from 'src/lib/const/consts';
 import { User, UserDocument } from 'src/user/schemas/user.schema';
+import { InjectRepository } from '@nestjs/typeorm';
+import { PermisosEntity } from '../entity/permisos.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
-export class ResourceService implements OnModuleInit {
+export class ResourceService {
   constructor(
-    @InjectModel(Resource.name) private resourceModel: Model<ResourceDocument>,
-    @InjectModel(Resource_Role.name)
-    private rrModel: Model<Resource_RoleDocument>,
-    @InjectModel(Role.name)
-    private roleModel: Model<RoleDocument>,
-    @InjectModel(User.name)
-    private userModel: Model<UserDocument>,
-  ) {}
+    @InjectRepository(PermisosEntity)
+    private resourceModel: Repository<PermisosEntity>,
+  ) // @InjectModel(Resource.name) private resourceModel: Model<ResourceDocument>,
+  // @InjectModel(Resource_Role.name)
+  // private rrModel: Model<Resource_RoleDocument>,
+  // @InjectModel(Role.name)
+  // private roleModel: Model<RoleDocument>,
+  // @InjectModel(User.name)
+  // private userModel: Model<UserDocument>,
+  {}
 
-  async onModuleInit() {
-    const count = await this.resourceModel.estimatedDocumentCount();
-    if (count > 0) return;
-    try {
-      //inserta los recursos para los roles
-      await this.resourceModel.insertMany(resourcesByDefault);
-    } catch (e) {
-      throw new Error(`Error en ResourceService.onModuleInit ${e}`);
-    }
-  }
+  // async onModuleInit() {
+  //   const count = await this.resourceModel.estimatedDocumentCount();
+  //   if (count > 0) return;
+  //   try {
+  //     //inserta los recursos para los roles
+  //     await this.resourceModel.insertMany(resourcesByDefault);
+  //   } catch (e) {
+  //     throw new Error(`Error en ResourceService.onModuleInit ${e}`);
+  //   }
+  // }
 
   // async delete(id: string) {
   //   return await this.resourceModel.findByIdAndDelete(id);
   // }
 
   async findAll(user: any): Promise<Resource[] | any[]> {
-    const { findUserBack, findUser } = user;
-    const resources = await this.resourceModel
-      .find({ status: true })
-      .sort([['name', 'ascending']]);
+    // const { findUserBack, findUser } = user;
+    // const resources = await this.resourceModel
+    //   .find({ status: true })
+    //   .sort([['name', 'ascending']]);
 
-    const resourcesAlloweds = await this.rrModel.findOne({
-      role: findUserBack.user.role._id,
-    });
+    // const resourcesAlloweds = await this.rrModel.findOne({
+    //   role: findUserBack.user.role._id,
+    // });
 
-    const resourcesToUser = await this.resourceModel
-      .find({
-        _id: { $in: resourcesAlloweds.resource },
-        status: true,
-      })
-      .sort([['name', 'ascending']]);
+    // const resourcesToUser = await this.resourceModel
+    //   .find({
+    //     _id: { $in: resourcesAlloweds.resource },
+    //     status: true,
+    //   })
+    //   .sort([['name', 'ascending']]);
 
-    let formatResourcesToFront = [];
-    if (findUser.role !== 'OWNER') {
-      formatResourcesToFront = resourcesToUser.map((res) => {
-        return {
-          label: res.name,
-          value: res.key,
-        };
-      });
-    } else {
-      formatResourcesToFront = resources.map((res) => {
-        return {
-          label: res.name,
-          value: res.key,
-        };
-      });
-    }
+    // let formatResourcesToFront = [];
+    // if (findUser.role !== 'OWNER') {
+    //   formatResourcesToFront = resourcesToUser.map((res) => {
+    //     return {
+    //       label: res.name,
+    //       value: res.key,
+    //     };
+    //   });
+    // } else {
+    //   formatResourcesToFront = resources.map((res) => {
+    //     return {
+    //       label: res.name,
+    //       value: res.key,
+    //     };
+    //   });
+    // }
 
-    return formatResourcesToFront;
+    // return formatResourcesToFront;
+    return [];
   }
 
   async findAllToCRUD(): Promise<Resource[] | any[]> {
-    const resources = await this.resourceModel
-      .find({ status: true })
-      .sort([['name', 'ascending']]);
+    // const resources = await this.resourceModel
+    //   .find({ status: true })
+    //   .sort([['name', 'ascending']]);
 
-    return resources;
+    // return resources;
+    return [];
   }
 
   async findOne(id: string): Promise<Resource | any[]> {
-    const resource = await this.resourceModel.findOne({
-      _id: id,
-      status: true,
-    });
+    // const resource = await this.resourceModel.findOne({
+    //   _id: id,
+    //   status: true,
+    // });
 
-    if (!resource) {
-      throw new HttpException(
-        {
-          status: HttpStatus.BAD_REQUEST,
-          type: 'BAD_REQUEST',
-          message: 'El permiso no existe o está inactivo.',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+    // if (!resource) {
+    //   throw new HttpException(
+    //     {
+    //       status: HttpStatus.BAD_REQUEST,
+    //       type: 'BAD_REQUEST',
+    //       message: 'El permiso no existe o está inactivo.',
+    //     },
+    //     HttpStatus.BAD_REQUEST,
+    //   );
+    // }
 
-    return resource;
+    // return resource;
+    return [];
   }
 
   //Add a single role
   async create(createResource: Resource): Promise<Resource> {
-    const { name, key } = createResource;
+    // const { name, key } = createResource;
 
-    if (!name || !key) {
-      throw new HttpException(
-        {
-          status: HttpStatus.BAD_REQUEST,
-          type: 'BAD_REQUEST',
-          message: `Los campos nombre y key son requeridos.`,
-        },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+    // if (!name || !key) {
+    //   throw new HttpException(
+    //     {
+    //       status: HttpStatus.BAD_REQUEST,
+    //       type: 'BAD_REQUEST',
+    //       message: `Los campos nombre y key son requeridos.`,
+    //     },
+    //     HttpStatus.BAD_REQUEST,
+    //   );
+    // }
 
-    //Solo se permite letras
-    const patt = new RegExp(/^[A-Za-z]+$/g);
-    if (!patt.test(key)) {
-      throw new HttpException(
-        {
-          status: HttpStatus.BAD_REQUEST,
-          type: 'BAD_REQUEST',
-          message: `El key solo permite letras y sin espacios en blanco.`,
-        },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+    // //Solo se permite letras
+    // const patt = new RegExp(/^[A-Za-z]+$/g);
+    // if (!patt.test(key)) {
+    //   throw new HttpException(
+    //     {
+    //       status: HttpStatus.BAD_REQUEST,
+    //       type: 'BAD_REQUEST',
+    //       message: `El key solo permite letras y sin espacios en blanco.`,
+    //     },
+    //     HttpStatus.BAD_REQUEST,
+    //   );
+    // }
 
-    const findExistsXName = await this.resourceModel.findOne({ name });
-    const findExistsXKey = await this.resourceModel.findOne({ key });
+    // const findExistsXName = await this.resourceModel.findOne({ name });
+    // const findExistsXKey = await this.resourceModel.findOne({ key });
 
-    if (findExistsXName || findExistsXKey) {
-      throw new HttpException(
-        {
-          status: HttpStatus.BAD_REQUEST,
-          type: 'BAD_REQUEST',
-          message: `El nombre o el key ya existe.`,
-        },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+    // if (findExistsXName || findExistsXKey) {
+    //   throw new HttpException(
+    //     {
+    //       status: HttpStatus.BAD_REQUEST,
+    //       type: 'BAD_REQUEST',
+    //       message: `El nombre o el key ya existe.`,
+    //     },
+    //     HttpStatus.BAD_REQUEST,
+    //   );
+    // }
 
-    const modifyData: Resource = {
-      ...createResource,
-      status: true,
-    };
+    // const modifyData: Resource = {
+    //   ...createResource,
+    //   status: true,
+    // };
 
-    const createdResource = new this.resourceModel(modifyData);
-    return createdResource.save();
+    // const createdResource = new this.resourceModel(modifyData);
+    // return createdResource.save();
+    return;
   }
 
   //Put a single
   async update(id: string, bodyRole: Resource): Promise<Resource> {
-    const { name, key } = bodyRole;
+    // const { name, key } = bodyRole;
 
-    //buscar el nombre que esta siendo modificado y que no coincida con uno registrado
-    const findResource = await this.resourceModel.findById(id);
-    const findNameRep = await this.resourceModel.findOne({ name });
-    if (findNameRep && findNameRep.name !== findResource.name) {
-      throw new HttpException(
-        {
-          status: HttpStatus.BAD_REQUEST,
-          type: 'BAD_REQUEST',
-          message: 'El nombre ya existe.',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+    // //buscar el nombre que esta siendo modificado y que no coincida con uno registrado
+    // const findResource = await this.resourceModel.findById(id);
+    // const findNameRep = await this.resourceModel.findOne({ name });
+    // if (findNameRep && findNameRep.name !== findResource.name) {
+    //   throw new HttpException(
+    //     {
+    //       status: HttpStatus.BAD_REQUEST,
+    //       type: 'BAD_REQUEST',
+    //       message: 'El nombre ya existe.',
+    //     },
+    //     HttpStatus.BAD_REQUEST,
+    //   );
+    // }
 
-    //buscar el key que esta siendo modificado y que no coincida con uno registrado
-    const findKeyRep = await this.resourceModel.findOne({ key });
-    const lowerKey = findKeyRep && findKeyRep.key.toLowerCase().trim();
-    if (findKeyRep && lowerKey !== findResource.key.toLowerCase().trim()) {
-      throw new HttpException(
-        {
-          status: HttpStatus.BAD_REQUEST,
-          type: 'BAD_REQUEST',
-          message: 'El key ya existe.',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+    // //buscar el key que esta siendo modificado y que no coincida con uno registrado
+    // const findKeyRep = await this.resourceModel.findOne({ key });
+    // const lowerKey = findKeyRep && findKeyRep.key.toLowerCase().trim();
+    // if (findKeyRep && lowerKey !== findResource.key.toLowerCase().trim()) {
+    //   throw new HttpException(
+    //     {
+    //       status: HttpStatus.BAD_REQUEST,
+    //       type: 'BAD_REQUEST',
+    //       message: 'El key ya existe.',
+    //     },
+    //     HttpStatus.BAD_REQUEST,
+    //   );
+    // }
 
-    const update = await this.resourceModel.findByIdAndUpdate(id, bodyRole, {
-      new: true,
-    });
-    return update;
+    // const update = await this.resourceModel.findByIdAndUpdate(id, bodyRole, {
+    //   new: true,
+    // });
+    // return update;
+    return;
   }
 
   async findResourceByKey(key: string[]): Promise<ResourceDocument[]> {
-    return await this.resourceModel.find({
-      key: { $in: key },
-      status: true,
-    });
+    // return await this.resourceModel.find({
+    //   key: { $in: key },
+    //   status: true,
+    // });
+    return [];
   }
 
   async findResourcesById(id: string[]): Promise<ResourceDocument[]> {
-    return await this.resourceModel.find({
-      _id: { $in: id },
-      status: true,
-    });
+    // return await this.resourceModel.find({
+    //   _id: { $in: id },
+    //   status: true,
+    // });
+    return [];
   }
 }

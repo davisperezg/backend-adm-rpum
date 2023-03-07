@@ -26,26 +26,30 @@ import {
   CopyServicesSchema,
   CopyServices_User,
 } from './schemas/cp-services-user';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ServicesUserEntity } from './entity/servicios-user.entity';
+import { AuxServicesUserEntity } from './entity/cp-servicios.user.entity';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: Services_User.name, schema: ServicesUserSchema },
-      { name: User.name, schema: UserSchema },
-      { name: Resource_User.name, schema: Resource_UserSchema },
-      { name: Resource_Role.name, schema: Resource_RoleSchema },
-      { name: Role.name, schema: RoleSchema },
-      { name: CopyServices_User.name, schema: CopyServicesSchema },
-      { name: ModuleEntity.name, schema: ModuleSchema },
-      { name: Menu.name, schema: MenuSchema },
-    ]),
+    // MongooseModule.forFeature([
+    //   { name: Services_User.name, schema: ServicesUserSchema },
+    //   { name: User.name, schema: UserSchema },
+    //   { name: Resource_User.name, schema: Resource_UserSchema },
+    //   { name: Resource_Role.name, schema: Resource_RoleSchema },
+    //   { name: Role.name, schema: RoleSchema },
+    //   { name: CopyServices_User.name, schema: CopyServicesSchema },
+    //   { name: ModuleEntity.name, schema: ModuleSchema },
+    //   { name: Menu.name, schema: MenuSchema },
+    // ]),
+    TypeOrmModule.forFeature([ServicesUserEntity, AuxServicesUserEntity]),
   ],
   providers: [
     ServicesUsersService,
-    UserService,
-    ModuleService,
-    RoleService,
-    MenuService,
+    // UserService,
+    // ModuleService,
+    // RoleService,
+    // MenuService,
   ],
   controllers: [ServicesUsersController],
 })

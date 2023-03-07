@@ -18,6 +18,12 @@ import { UserEntity } from './user/enitty/user.entity';
 import { RolEntity } from './role/entity/rol.entity';
 import { ModuloEntity } from './module/entity/modulo.entity';
 import { MenuEntity } from './menu/entity/menu.entity';
+import { CategoriaModule } from './categoria/categoria.module';
+import { CategoriaPermsisosEntity } from './categoria/entity/categoria.entity';
+import { PermisosEntity } from './resource/entity/permisos.entity';
+import { PermisosRolEntity } from './resources-roles/entity/recursos-roles.entity';
+import { PermisosUserEntity } from './resources-users/entity/recursos-users.entity';
+import { ServicesUserEntity } from './services-users/entity/servicios-user.entity';
 
 @Module({
   imports: [
@@ -41,14 +47,25 @@ import { MenuEntity } from './menu/entity/menu.entity';
     } as any),
     UserModule,
     RoleModule,
-    // ResourceModule,
+    ResourceModule,
     //MenuModule,
     ModuleModule,
     // AuthModule,
-    // ResourcesRolesModule,
-    // ResourcesUsersModule,
-    // ServicesUsersModule,
-    TypeOrmModule.forFeature([UserEntity, RolEntity, ModuloEntity, MenuEntity]),
+    ResourcesRolesModule,
+    ResourcesUsersModule,
+    ServicesUsersModule,
+    TypeOrmModule.forFeature([
+      UserEntity,
+      RolEntity,
+      ModuloEntity,
+      MenuEntity,
+      PermisosEntity,
+      CategoriaPermsisosEntity,
+      PermisosRolEntity,
+      PermisosUserEntity,
+      ServicesUserEntity,
+    ]),
+    //CategoriaModule,
   ],
   controllers: [AppController],
   providers: [

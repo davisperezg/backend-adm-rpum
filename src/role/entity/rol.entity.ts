@@ -1,4 +1,5 @@
 import { ModuloEntity } from 'src/module/entity/modulo.entity';
+import { PermisosRolEntity } from 'src/resources-roles/entity/recursos-roles.entity';
 import { UserEntity } from 'src/user/enitty/user.entity';
 import { User } from 'src/user/schemas/user.schema';
 import {
@@ -25,9 +26,6 @@ export class RolEntity {
 
   @Column({ default: true })
   estado?: boolean;
-
-  // @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
-  // duenio: User;
 
   @Column({
     type: 'datetime',
@@ -65,4 +63,8 @@ export class RolEntity {
   @OneToOne(() => UserEntity)
   @JoinColumn({ name: 'user_update' })
   user_update?: UserEntity;
+
+  //Referencia a user x permisos_roles
+  @OneToMany(() => PermisosRolEntity, (service) => service.rol)
+  roles_permiso?: PermisosRolEntity[];
 }

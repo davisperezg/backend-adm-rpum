@@ -1,5 +1,7 @@
 import { MenuEntity } from 'src/menu/entity/menu.entity';
 import { RolEntity } from 'src/role/entity/rol.entity';
+import { AuxServicesUserEntity } from 'src/services-users/entity/cp-servicios.user.entity';
+import { ServicesUserEntity } from 'src/services-users/entity/servicios-user.entity';
 import { UserEntity } from 'src/user/enitty/user.entity';
 import {
   Entity,
@@ -64,6 +66,14 @@ export class ModuloEntity {
 
   @ManyToMany(() => RolEntity, (rol) => rol.modulos)
   roles?: RolEntity[];
+
+  //Referencia a modulos x services_users
+  @OneToMany(() => ServicesUserEntity, (service) => service.modulos)
+  modulos_service?: ServicesUserEntity[];
+
+  //Referencia a user x aux_services_users
+  @OneToMany(() => AuxServicesUserEntity, (service) => service.modulos)
+  aux_modulos_service?: AuxServicesUserEntity[];
 
   //Referencia a usuarios
   @OneToOne(() => UserEntity)
