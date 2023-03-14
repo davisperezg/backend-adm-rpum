@@ -1,3 +1,4 @@
+import { UpdateUserDTO } from './../dto/update-user';
 import { UserService } from '../services/user.service';
 import {
   Body,
@@ -12,12 +13,14 @@ import {
   UseGuards,
   Patch,
 } from '@nestjs/common';
-import { User, UserDocument } from '../schemas/user.schema';
+import { User } from '../schemas/user.schema';
 import { CtxUser } from 'src/lib/decorators/ctx-user.decorators';
 import { JwtAuthGuard } from 'src/lib/guards/auth.guard';
 import PermissionGuard from 'src/lib/guards/resources.guard';
 import Permission from 'src/lib/type/permission.type';
 import { CreateUserDTO } from '../dto/create-user';
+import { QueryToken } from 'src/auth/dto/queryToken';
+import { ChangePasswordDTO } from '../dto/change-password';
 
 //base: http://localhost:3000/api/v1/users
 @Controller('api/v1/users')
@@ -26,99 +29,90 @@ export class UserController {
 
   // Get Users: http://localhost:3000/api/v1/users
   @Get()
-  //@UseGuards(PermissionGuard(Permission.ReadUsers))
-  getUsers() {
-    //@CtxUser() user: any
-    return this.userService.findAll();
+  @UseGuards(PermissionGuard(Permission.ReadUsers))
+  getUsers(@CtxUser() user: QueryToken) {
+    return this.userService.findAll(user);
   }
 
-  // Get User: http://localhost:3000/api/v1/users/find/6223169df6066a084cef08c2
-  @Get(':id')
-  //@UseGuards(PermissionGuard(Permission.GetOneUser))
+  // Get User: http://localhost:3000/api/v1/users/1
+  @Get('/get/:id')
+  @UseGuards(PermissionGuard(Permission.GetOneUsers))
   getUser(@Param('id') id: number) {
-    return this.userService.findUserByCodApi(id);
+    return this.userService.findUserById(id);
   }
-
-  // Get users removes: http://localhost:3000/api/v1/users/removes
-  // @Get('/removes')
-  // getUsersRemoves() {
-  //   return this.userService.findAllDeleted();
-  // }
 
   // Get Me: http://localhost:3000/api/v1/users/whois
-  @Get('/whois')
-  //@UseGuards(JwtAuthGuard)
-  whois(
-    @Res() res,
-    //@CtxUser() user: any
-  ): Promise<UserDocument> {
-    //const { findUser } = user;
-    return res.status(HttpStatus.OK).json({ user: 'findUser' });
+  @Get('/me')
+  @UseGuards(JwtAuthGuard)
+  whois(@Res() res, @CtxUser() user: QueryToken) {
+    const { tokenUsuario } = user;
+    return res.status(HttpStatus.OK).json(tokenUsuario);
   }
 
   // Add User(POST): http://localhost:3000/api/v1/users
   @Post()
-  //@UseGuards(PermissionGuard(Permission.CreateUser))
+  @UseGuards(PermissionGuard(Permission.CreateUsers))
   async createUser(
     @Res() res,
     @Body() createBody: CreateUserDTO,
-    //@CtxUser() userToken: any,
+    @CtxUser() userToken: QueryToken,
   ): Promise<CreateUserDTO> {
-    const user = await this.userService.create(createBody);
+    const user = await this.userService.create(createBody, userToken);
     return res.status(HttpStatus.OK).json({
       message: 'User Successfully Created',
       user,
     });
   }
 
-  // Update User(PUT): http://localhost:3000/api/v1/users/6223169df6066a084cef08c2
-  @Put(':id')
-  //@UseGuards(PermissionGuard(Permission.UpdateUser))
+  // Update User(PUT): http://localhost:3000/api/v1/users/1
+  @Put('/user/:id')
+  @UseGuards(PermissionGuard(Permission.UpdateUsers))
   async updateUser(
     @Res() res,
-    @Param('id') id: string,
-    @Body() createBody: User,
-    //@CtxUser() user: any,
-  ): Promise<User> {
-    const userUpdated = await this.userService.update(id, createBody);
+    @Param('id') id: number,
+    @Body() createBody: UpdateUserDTO,
+    @CtxUser() user: QueryToken,
+  ) {
+    const userUpdated = await this.userService.update(id, createBody, user);
     return res.status(HttpStatus.OK).json({
       message: 'User Updated Successfully',
       userUpdated,
     });
   }
 
-  // Update User(PUT): http://localhost:3000/api/v1/users/change-password/6223169df6066a084cef08c2
-  @Put('/change-password/:id')
-  //@UseGuards(PermissionGuard(Permission.ChangePasswordUser))
+  //Update User(Patch): http://localhost:3000/api/v1/users/change-password/1
+  @Patch('/change-password/:id')
+  @UseGuards(PermissionGuard(Permission.ChangePasswordUsers))
   async changeUser(
     @Res() res,
-    @Param('id') id: string,
+    @Param('id') id: number,
     @Body()
-    data: {
-      password: string;
-    },
-    //@CtxUser() userToken: any,
-  ): Promise<User> {
+    data: ChangePasswordDTO,
+    @CtxUser() userToken: QueryToken,
+  ) {
+    const { contrasenia } = data;
+
     const passwordUpdated = await this.userService.changePassword(
       id,
-      data,
-      //userToken,
+      contrasenia,
+      userToken,
     );
+
     return res.status(HttpStatus.OK).json({
       message: 'Password Updated Successfully',
       passwordUpdated,
     });
   }
 
-  // Delete User(DELETE): http://localhost:3000/api/v1/users/6223169df6066a084cef08c2
+  // Delete User(DELETE): http://localhost:3000/api/v1/users/1
   @Delete(':id')
-  //@UseGuards(PermissionGuard(Permission.DeleteUser))
+  @UseGuards(PermissionGuard(Permission.DeleteUsers))
   async deleteUser(
     @Res() res,
     @Param('id') id: number,
-    //@CtxUser() user: any,
+    @CtxUser() user: QueryToken,
   ): Promise<boolean> {
-    const response = await this.userService.delete(id);
+    const response = await this.userService.delete(id, user);
     return res.status(HttpStatus.OK).json({
       CodRspuesta: response ? 0 : 1,
       MensajeRespuesta: response
@@ -127,15 +121,15 @@ export class UserController {
     });
   }
 
-  // Restore User: http://localhost:3000/api/v1/users/restore/6223169df6066a084cef08c2
+  // Restore User: http://localhost:3000/api/v1/users/restore/1
   @Patch(':id')
-  //@UseGuards(PermissionGuard(Permission.RestoreUser))
+  @UseGuards(PermissionGuard(Permission.RestoreUsers))
   async restoreUser(
     @Res() res,
     @Param('id') id: number,
-    //  @CtxUser() user: any,
-  ): Promise<User> {
-    const response = await this.userService.restore(id);
+    @CtxUser() user: QueryToken,
+  ) {
+    const response = await this.userService.restore(id, user);
     return res.status(HttpStatus.OK).json({
       CodRspuesta: response ? 0 : 1,
       MensajeRespuesta: response

@@ -1,15 +1,16 @@
 import { ModuloEntity } from 'src/module/entity/modulo.entity';
 import { PermisosRolEntity } from 'src/resources-roles/entity/recursos-roles.entity';
 import { UserEntity } from 'src/user/enitty/user.entity';
-import { User } from 'src/user/schemas/user.schema';
 import {
+  BeforeInsert,
+  BeforeUpdate,
   Column,
   Entity,
   JoinColumn,
   JoinTable,
   ManyToMany,
+  ManyToOne,
   OneToMany,
-  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -21,7 +22,7 @@ export class RolEntity {
   @Column({ length: 45 })
   nombre: string;
 
-  @Column({ length: 150 })
+  @Column({ length: 150, nullable: true })
   detalle?: string;
 
   @Column({ default: true })
@@ -52,19 +53,32 @@ export class RolEntity {
   @OneToMany(() => UserEntity, (user) => user.rol)
   usuarios?: UserEntity[];
 
-  @OneToOne(() => UserEntity)
+  @ManyToOne(() => UserEntity)
   @JoinColumn({ name: 'user_create' })
   user_create?: UserEntity;
 
-  @OneToOne(() => UserEntity)
+  @ManyToOne(() => UserEntity)
   @JoinColumn({ name: 'user_delete' })
   user_delete?: UserEntity;
 
-  @OneToOne(() => UserEntity)
+  @ManyToOne(() => UserEntity)
   @JoinColumn({ name: 'user_update' })
   user_update?: UserEntity;
 
   //Referencia a user x permisos_roles
   @OneToMany(() => PermisosRolEntity, (service) => service.rol)
   roles_permiso?: PermisosRolEntity[];
+
+  @BeforeUpdate()
+  @BeforeInsert()
+  trimProperties() {
+    //const propertiesToExclude = ['no_trim_1', 'no_trim_2'];
+    for (const key in this) {
+      const value = this[key as keyof this];
+      //typeof value === 'string' && !propertiesToExclude.includes(key)
+      if (typeof value === 'string') {
+        this[key as keyof this] = value.trim() as any;
+      }
+    }
+  }
 }

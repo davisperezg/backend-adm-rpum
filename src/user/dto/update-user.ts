@@ -7,8 +7,8 @@ import {
   Matches,
   IsOptional,
   IsDate,
+  IsInt,
 } from 'class-validator';
-import { IsMatchPassword } from 'src/lib/decorators/match-password.decorator';
 
 export class UpdateUserDTO {
   //NOMBRE
@@ -71,48 +71,8 @@ export class UpdateUserDTO {
   @IsOptional()
   email?: string;
 
-  //CONTRASENIA
-  // @Matches(/((?=.*\d)(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
-  //   message:
-  //     'La contraseña debe contener una mayúscula, números y caracter especial',
-  // })
-  // @MaxLength(200, {
-  //   message:
-  //     'La contraseña del usuario debe ser igual o menor a 200 caracteres',
-  // })
-  // @MinLength(8, {
-  //   message: 'La contraseña del usuario debe ser igual o mayor a 8 caracteres',
-  // })
-  // @IsNotEmpty({ message: 'Por favor, ingrese la contraseña del usuario' })
-  // @IsString({
-  //   message: 'La contraseña del usuario debe contener una cadena de texto',
-  // })
-  // @IsOptional()
-  // contrasenia?: string;
-
-  //CONFIRMAR PASSWORD
-  // @IsMatchPassword('contrasenia', {
-  //   message:
-  //     'La confirmación de contraseña no coincide con la contraseña ingresada',
-  // })
-  // @MaxLength(200, {
-  //   message:
-  //     'La contraseña del usuario debe ser igual o menor a 200 caracteres',
-  // })
-  // @MinLength(8, {
-  //   message:
-  //     'La confirmación de contraseña del usuario debe ser igual o mayor a 8 caracteres',
-  // })
-  // @IsNotEmpty({ message: 'Por favor, confirme contraseña' })
-  // @IsString({
-  //   message:
-  //     'La confirmación de contraseña del usuario debe contener una cadena de texto',
-  // })
-  // @IsOptional()
-  // confirmar_contrasenia?: string;
-
   //TELEFONO_MOVIL_1
-  @Matches(/^9[0-9]{8}+$/, {
+  @Matches(/^(9[0-9]{8})+$/, {
     message: 'Ingrese un telefono móvil válido',
   })
   @MaxLength(9, {
@@ -128,9 +88,9 @@ export class UpdateUserDTO {
   @IsOptional()
   telefono_movil_1?: string;
 
-  //TELEFONO_MOVIL_1
-  @Matches(/^(9[0-9]{8}+$)/, {
-    message: 'Ingrese un telefono móvil 2 válido',
+  //TELEFONO_MOVIL_2
+  @Matches(/^(9[0-9]{8})+$/, {
+    message: 'Ingrese un telefono móvil válido',
   })
   @MaxLength(9, {
     message: 'El telefono móvil 2 del usuario debe ser igual a 9 caracteres',
@@ -155,4 +115,8 @@ export class UpdateUserDTO {
   })
   @IsOptional()
   foto?: string;
+
+  @IsInt({ message: 'Ingrese un rol válido' })
+  @IsOptional()
+  rol?: number;
 }

@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { forwardRef } from '@nestjs/common/utils';
 import { MongooseModule } from '@nestjs/mongoose';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Menu, MenuSchema } from 'src/menu/schemas/menu.schema';
@@ -9,14 +10,18 @@ import {
   Module as ModuleEntity,
 } from 'src/module/schemas/module.schema';
 import { ModuleService } from 'src/module/services/module.service';
+import { PermisosRolEntity } from 'src/resources-roles/entity/recursos-roles.entity';
 import {
   Resource_Role,
   Resource_RoleSchema,
 } from 'src/resources-roles/schemas/resources-role';
+import { PermisosUserEntity } from 'src/resources-users/entity/recursos-users.entity';
 import {
   Resource_User,
   Resource_UserSchema,
 } from 'src/resources-users/schemas/resources-user';
+import { AuxServicesUserEntity } from 'src/services-users/entity/cp-servicios.user.entity';
+import { ServicesUserEntity } from 'src/services-users/entity/servicios-user.entity';
 import {
   CopyServicesSchema,
   CopyServices_User,
@@ -26,6 +31,7 @@ import {
   Services_User,
 } from 'src/services-users/schemas/services-user';
 import { ServicesUsersService } from 'src/services-users/services/services-users.service';
+import { UserEntity } from 'src/user/enitty/user.entity';
 import { User, UserSchema } from 'src/user/schemas/user.schema';
 import { UserService } from 'src/user/services/user.service';
 import { RoleController } from './controllers/role.controller';
@@ -45,7 +51,15 @@ import { RoleService } from './services/role.service';
     //   { name: ModuleEntity.name, schema: ModuleSchema },
     //   { name: Menu.name, schema: MenuSchema },
     // ]),
-    TypeOrmModule.forFeature([RolEntity]),
+    TypeOrmModule.forFeature([
+      RolEntity,
+      PermisosUserEntity,
+      PermisosRolEntity,
+      UserEntity,
+      AuxServicesUserEntity,
+      ServicesUserEntity,
+    ]),
+    //forwardRef(() => ModuleModule),
     ModuleModule,
   ],
   controllers: [RoleController],

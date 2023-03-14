@@ -30,9 +30,8 @@ import { Repository } from 'typeorm';
 export class ResourcesRolesService {
   constructor(
     @InjectRepository(PermisosRolEntity)
-    private rrModel: Repository<PermisosRolEntity>,
-  ) // @InjectModel(Resource_Role.name)
-  // private rrModel: Model<Resource_RoleDocument>,
+    private rrModel: Repository<PermisosRolEntity>, // @InjectModel(Resource_Role.name)
+  ) // private rrModel: Model<Resource_RoleDocument>,
   // private readonly roleService: RoleService,
   // private readonly resourceService: ResourceService,
   // @InjectModel(Resource_User.name)
@@ -42,34 +41,6 @@ export class ResourcesRolesService {
   // @InjectModel(CopyResource_User.name)
   // private copyRuModel: Model<CopyResource_UserDocument>,
   {}
-
-  // async onApplicationBootstrap() {
-  //   const count = await this.rrModel.estimatedDocumentCount();
-  //   if (count > 0) return;
-  //   try {
-  //     const findResources = await this.resourceService.findResourceByKey(
-  //       resourcesByDefault.map((res) => res.key),
-  //     );
-
-  //     const getIdsResources = findResources.map((res) => res._id);
-
-  //     setTimeout(async () => {
-  //       const count = await this.rrModel.estimatedDocumentCount();
-  //       if (count > 0) return;
-  //       const getRoleOwner = await this.roleService.findRoleByName(
-  //         String('OWNER'),
-  //       );
-
-  //       await new this.rrModel({
-  //         role: getRoleOwner._id,
-  //         resource: getIdsResources,
-  //         status: true,
-  //       }).save();
-  //     }, 6000);
-  //   } catch (e) {
-  //     throw new Error(`Error en RRService.onModuleInit ${e}`);
-  //   }
-  // }
 
   async findAll(): Promise<Resource_Role[]> {
     // const resources = await this.rrModel

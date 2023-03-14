@@ -21,7 +21,7 @@ export class ResourceController {
 
   // Get Resources
   @Get()
-  @UseGuards(PermissionGuard(Permission.ReadResourcesItem))
+  //@UseGuards(PermissionGuard(Permission.ReadResourcesItem))
   async getResources(@Res() res, @CtxUser() user): Promise<Resource[]> {
     const menus = await this.resourceService.findAll(user);
     return res.status(HttpStatus.OK).json(menus);
@@ -29,7 +29,7 @@ export class ResourceController {
 
   // Get Resources to CRUD
   @Get('/list')
-  @UseGuards(PermissionGuard(Permission.ReadResourcesList))
+  //@UseGuards(PermissionGuard(Permission.ReadResourcesList))
   async getResourcesToCRUD(@Res() res): Promise<Resource[]> {
     const menus = await this.resourceService.findAllToCRUD();
     return res.status(HttpStatus.OK).json(menus);
@@ -37,14 +37,14 @@ export class ResourceController {
 
   // Get One Resource To Edit
   @Get('/find/:id')
-  @UseGuards(PermissionGuard(Permission.GetOneResource))
+  //@UseGuards(PermissionGuard(Permission.GetOneResource))
   getPermission(@Param('id') id: string) {
     return this.resourceService.findOne(id);
   }
 
   // Add Resource
   @Post()
-  @UseGuards(PermissionGuard(Permission.CreateResource))
+  //@UseGuards(PermissionGuard(Permission.CreateResource))
   async createResource(
     @Res() res,
     @Body() createBody: Resource,
@@ -58,7 +58,7 @@ export class ResourceController {
 
   // Update Resource: /resources/605ab8372ed8db2ad4839d87
   @Put(':id')
-  @UseGuards(PermissionGuard(Permission.EditResource))
+  //@UseGuards(PermissionGuard(Permission.EditResource))
   async updateResource(
     @Res() res,
     @Param('id') id: string,

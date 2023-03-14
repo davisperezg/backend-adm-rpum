@@ -29,7 +29,7 @@ export class ResourcesRolesController {
 
   // Get Menus
   @Get('/role/:id')
-  @UseGuards(PermissionGuard(Permission.ReadResourcesByRol))
+  //@UseGuards(PermissionGuard(Permission.ReadResourcesByRol))
   async getResourcesByRol(
     @Res() res,
     @Param('id') id: string,
@@ -40,7 +40,7 @@ export class ResourcesRolesController {
 
   // Add Resource
   @Post()
-  @UseGuards(PermissionGuard(Permission.CreateResourceR))
+  //@UseGuards(PermissionGuard(Permission.CreateResourceR))
   async createRR(
     @Res() res,
     @Body() createBody: Resource_Role,

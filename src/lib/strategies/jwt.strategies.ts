@@ -9,9 +9,10 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { AuthService } from 'src/auth/services/auth.service';
 import { ResourcesUsersService } from 'src/resources-users/services/resources-users.service';
+import { ROL_PRINCIPAL } from '../const/consts';
 
 interface JWType {
-  userId: string;
+  userId: number;
 }
 
 @Injectable()
@@ -29,64 +30,67 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JWType) {
-    const myUser: any = await this.authService.validateUser(payload.userId);
+    const { json, entity } = await this.authService.validateUser(
+      payload.userId,
+    );
+
+    const myUser: any = json;
 
     //busca los modulos y menus activos
-    const modulesTrues = myUser.role.module
-      .filter((mod) => mod.status === true)
+    const modulesTrues = myUser.rol.modulos
+      .filter((mod) => mod.estado === true)
       .map((mod) => {
         return {
-          ...mod._doc,
-          menu: mod.menu.filter((filt) => filt.status === true),
+          ...mod,
+          menus: mod.menus.filter((filt) => filt.estado === true),
         };
       });
 
     const validaModules = [];
-    if (myUser.role.name !== 'OWNER') {
-      myUser._doc.creator.role.module.filter((mod) => {
+    if (myUser.rol.nombre !== ROL_PRINCIPAL) {
+      myUser.creado_por.rol.modulos.filter((mod) => {
         modulesTrues.filter((mods) => {
-          if (mod.name === mods.name) {
+          if (mod.nombre === mods.nombre) {
             validaModules.push(mods);
           }
         });
       });
     }
 
-    const findUser = [myUser._doc].map((format) => {
+    const tokenUsuario = [myUser].map((format) => {
       return {
         ...format,
-        role: {
-          ...format.role._doc,
-          module: myUser.role.name === 'OWNER' ? modulesTrues : validaModules,
+        rol: {
+          ...format.rol,
+          modulos:
+            myUser.rol.nombre === ROL_PRINCIPAL ? modulesTrues : validaModules,
         },
       };
     })[0];
 
     //si el usuario tiene estado false se cierra el acceso al sistema
-    if (findUser.status === false) {
-      throw new HttpException(
-        {
-          status: HttpStatus.UNAUTHORIZED,
-          type: 'UNAUTHORIZED',
-          message: 'Unauthorized Exception',
-        },
-        HttpStatus.UNAUTHORIZED,
-      );
+    if (tokenUsuario.estado_usuario === false) {
+      throw new HttpException('Acceso denegado!!', HttpStatus.UNAUTHORIZED);
     }
 
-    const findResource = await this.ruService.findOneResourceByUser(
-      findUser._id,
+    const tokenPermisos = await this.ruService.findOneResourceByUser(
+      payload.userId,
     );
 
-    const user = {
-      findUser,
-      findResource,
+    const dataToken = {
+      tokenBkUsuario: { ...tokenUsuario },
+      tokenUsuario,
+      tokenPermisos,
+      tokenEntityFull: entity,
     };
 
-    if (!findUser) {
-      throw new UnauthorizedException();
+    //Eliminamos la propiedad creado_por en tokenUsuario
+    delete dataToken.tokenUsuario.creado_por;
+
+    if (!dataToken) {
+      throw new UnauthorizedException('Acceso denegado!!!');
     }
 
-    return user;
+    return dataToken;
   }
 }

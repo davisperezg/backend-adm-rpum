@@ -8,6 +8,7 @@ import {
   IsArray,
   IsNumber,
   ArrayMinSize,
+  IsNotEmpty,
 } from 'class-validator';
 export class UpdateRolDTO {
   @Matches(/^[A-Za-z0-9Ññ\s]+$/, {
@@ -23,8 +24,8 @@ export class UpdateRolDTO {
   @IsString({
     message: 'El nombre del rol debe contener una cadena de texto',
   })
-  @IsOptional()
-  nombre?: string;
+  @IsNotEmpty({ message: 'Por favor ingrese el nombre del rol' })
+  nombre: string;
 
   //DETALLE
   @MaxLength(150, {
@@ -49,5 +50,6 @@ export class UpdateRolDTO {
   @ValidateIf(
     (modulo) => typeof modulo.menus !== 'object' || modulo.menus.length > 0,
   )
+  @IsNotEmpty({ message: 'Por favor ingresar los modulos' })
   modulos: number[];
 }

@@ -29,6 +29,9 @@ import {
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ServicesUserEntity } from './entity/servicios-user.entity';
 import { AuxServicesUserEntity } from './entity/cp-servicios.user.entity';
+import { UserModule } from 'src/user/user.module';
+import { UserEntity } from 'src/user/enitty/user.entity';
+import { ModuloEntity } from 'src/module/entity/modulo.entity';
 
 @Module({
   imports: [
@@ -42,7 +45,12 @@ import { AuxServicesUserEntity } from './entity/cp-servicios.user.entity';
     //   { name: ModuleEntity.name, schema: ModuleSchema },
     //   { name: Menu.name, schema: MenuSchema },
     // ]),
-    TypeOrmModule.forFeature([ServicesUserEntity, AuxServicesUserEntity]),
+    TypeOrmModule.forFeature([
+      ServicesUserEntity,
+      AuxServicesUserEntity,
+      UserEntity,
+      ModuloEntity,
+    ]),
   ],
   providers: [
     ServicesUsersService,
@@ -52,5 +60,6 @@ import { AuxServicesUserEntity } from './entity/cp-servicios.user.entity';
     // MenuService,
   ],
   controllers: [ServicesUsersController],
+  exports: [ServicesUsersService],
 })
 export class ServicesUsersModule {}

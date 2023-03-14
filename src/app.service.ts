@@ -143,15 +143,23 @@ export class AppService implements OnApplicationBootstrap {
       this.menuRepository.save(menu4),
     ]);
 
+    const menus2 = await Promise.all([this.menuRepository.save(menu1)]);
+
     //Inserto el modulo x defecto
     const nuevoModulo = new ModuloEntity();
     nuevoModulo.nombre = MOD_PRINCIPAL;
     nuevoModulo.menus = menus;
     nuevoModulo.user_create = null;
 
+    const nuevoModulo2 = new ModuloEntity();
+    nuevoModulo2.nombre = 'test';
+    nuevoModulo2.menus = menus2;
+    nuevoModulo2.user_create = null;
+
     //Guardo los modulos x defecto
     const modulos = await Promise.all([
       this.moduloRepository.save(nuevoModulo),
+      this.moduloRepository.save(nuevoModulo2),
     ]);
 
     //Insertar los modulos x defecto al rol

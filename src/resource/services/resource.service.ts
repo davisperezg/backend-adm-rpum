@@ -22,26 +22,14 @@ import { Repository } from 'typeorm';
 export class ResourceService {
   constructor(
     @InjectRepository(PermisosEntity)
-    private resourceModel: Repository<PermisosEntity>,
-  ) // @InjectModel(Resource.name) private resourceModel: Model<ResourceDocument>,
-  // @InjectModel(Resource_Role.name)
+    private resourceModel: Repository<PermisosEntity>, // @InjectModel(Resource.name) private resourceModel: Model<ResourceDocument>,
+  ) // @InjectModel(Resource_Role.name)
   // private rrModel: Model<Resource_RoleDocument>,
   // @InjectModel(Role.name)
   // private roleModel: Model<RoleDocument>,
   // @InjectModel(User.name)
   // private userModel: Model<UserDocument>,
   {}
-
-  // async onModuleInit() {
-  //   const count = await this.resourceModel.estimatedDocumentCount();
-  //   if (count > 0) return;
-  //   try {
-  //     //inserta los recursos para los roles
-  //     await this.resourceModel.insertMany(resourcesByDefault);
-  //   } catch (e) {
-  //     throw new Error(`Error en ResourceService.onModuleInit ${e}`);
-  //   }
-  // }
 
   // async delete(id: string) {
   //   return await this.resourceModel.findByIdAndDelete(id);

@@ -17,40 +17,6 @@ export class MenuService {
     @InjectRepository(MenuEntity) private menuModel: Repository<MenuEntity>,
   ) {}
 
-  // async onModuleInit() {
-  //   const count = await this.menuModel.count();
-  //   if (count > 0) return;
-
-  //   try {
-  //     //await this.menuModel.updateMany({ status: null }, { status: true });
-
-  //     const menu1 = new MenuEntity();
-  //     menu1.nombre = 'Usuarios';
-  //     menu1.link = 'usuarios';
-
-  //     const menu2 = new MenuEntity();
-  //     menu2.nombre = 'Roles';
-  //     menu2.link = 'roles';
-
-  //     const menu3 = new MenuEntity();
-  //     menu3.nombre = 'Modulos';
-  //     menu3.link = 'modulos';
-
-  //     const menu4 = new MenuEntity();
-  //     menu4.nombre = 'Permisos';
-  //     menu4.link = 'permisos';
-
-  //     await Promise.all([
-  //       this.menuModel.save(menu1),
-  //       this.menuModel.save(menu2),
-  //       this.menuModel.save(menu3),
-  //       this.menuModel.save(menu4),
-  //     ]);
-  //   } catch (e) {
-  //     throw new Error(`Error en MenuService.onModuleInit ${e}`);
-  //   }
-  // }
-
   // async create(createMenu: Menu, user: any): Promise<Menu> {
   //   const { findUser } = user;
 

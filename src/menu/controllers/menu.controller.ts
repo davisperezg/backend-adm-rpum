@@ -13,7 +13,7 @@ import {
 import { CtxUser } from 'src/lib/decorators/ctx-user.decorators';
 import PermissionGuard from 'src/lib/guards/resources.guard';
 import Permission from 'src/lib/type/permission.type';
-import { Menu, MenuDocument } from '../schemas/menu.schema';
+import { Menu } from '../schemas/menu.schema';
 import { MenuService } from '../services/menu.service';
 
 //base: http://localhost:3000/api/v1/menus
@@ -23,7 +23,7 @@ export class MenuController {
 
   // Get Menus: http://localhost:3000/api/v1/menus
   @Get()
-  //@UseGuards(PermissionGuard(Permission.ReadMenu))
+  @UseGuards(PermissionGuard([Permission.ReadMenus, Permission.CreateModules]))
   async getMenus(@Res() res): Promise<Menu[]> {
     const menus = await this.menuService.findAll();
     return res.status(HttpStatus.OK).json(menus);

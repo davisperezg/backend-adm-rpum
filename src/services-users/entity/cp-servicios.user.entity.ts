@@ -6,9 +6,10 @@ import {
   ManyToOne,
   JoinColumn,
   PrimaryGeneratedColumn,
+  Unique,
 } from 'typeorm';
 
-@Entity({ name: 'aux_servicios_user' })
+@Entity({ name: 'aux_modulos_user' })
 export class AuxServicesUserEntity {
   @PrimaryGeneratedColumn()
   id?: number;
@@ -16,11 +17,15 @@ export class AuxServicesUserEntity {
   @Column({ default: true })
   estado?: boolean;
 
-  @ManyToOne(() => UserEntity, (user) => user.aux_users_service)
+  @ManyToOne(() => UserEntity, (user) => user.aux_users_service, {
+    nullable: false,
+  })
   @JoinColumn({ name: 'user_id' })
   user: UserEntity;
 
-  @ManyToOne(() => ModuloEntity, (modulo) => modulo.modulos_service)
-  @JoinColumn({ name: 'service_id' })
+  @ManyToOne(() => ModuloEntity, (modulo) => modulo.modulos_service, {
+    nullable: false,
+  })
+  @JoinColumn({ name: 'modulo_id' })
   modulos: ModuloEntity;
 }

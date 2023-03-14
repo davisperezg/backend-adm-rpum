@@ -38,6 +38,11 @@ import {
 } from 'src/services-users/schemas/cp-services-user';
 import { ServicesUsersService } from 'src/services-users/services/services-users.service';
 import { ConfigService } from '@nestjs/config';
+import { UserModule } from 'src/user/user.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { UserEntity } from 'src/user/enitty/user.entity';
+import { RolEntity } from 'src/role/entity/rol.entity';
+import { ResourcesUsersModule } from 'src/resources-users/resources-users.module';
 
 @Module({
   imports: [
@@ -52,31 +57,33 @@ import { ConfigService } from '@nestjs/config';
       },
       inject: [ConfigService],
     }),
-    MongooseModule.forFeature([
-      { name: 'User', schema: UserSchema },
-      { name: 'Role', schema: RoleSchema },
-      { name: 'Module', schema: ModuleSchema },
-      { name: 'Menu', schema: MenuSchema },
-      { name: 'Resource', schema: ResourceSchema },
-      { name: Resource_Role.name, schema: Resource_RoleSchema },
-      { name: Resource_User.name, schema: Resource_UserSchema },
-      { name: CopyResource_User.name, schema: CopyResource_UserSchema },
-      { name: Services_User.name, schema: ServicesUserSchema },
-      { name: CopyServices_User.name, schema: CopyServicesSchema },
-    ]),
+    TypeOrmModule.forFeature([UserEntity]),
+    ResourcesUsersModule,
+    // MongooseModule.forFeature([
+    //   { name: 'User', schema: UserSchema },
+    //   { name: 'Role', schema: RoleSchema },
+    //   { name: 'Module', schema: ModuleSchema },
+    //   { name: 'Menu', schema: MenuSchema },
+    //   { name: 'Resource', schema: ResourceSchema },
+    //   { name: Resource_Role.name, schema: Resource_RoleSchema },
+    //   { name: Resource_User.name, schema: Resource_UserSchema },
+    //   { name: CopyResource_User.name, schema: CopyResource_UserSchema },
+    //   { name: Services_User.name, schema: ServicesUserSchema },
+    //   { name: CopyServices_User.name, schema: CopyServicesSchema },
+    // ]),
   ],
   controllers: [AuthController],
   providers: [
-    ResourcesRolesService,
-    ResourcesUsersService,
     AuthService,
-    UserService,
     JwtStrategy,
-    RoleService,
-    ModuleService,
-    MenuService,
-    ResourceService,
-    ServicesUsersService,
+
+    // ResourcesRolesService,
+    // ResourcesUsersService,
+    // RoleService,
+    // ModuleService,
+    // MenuService,
+    // ResourceService,
+    // ServicesUsersService,
   ],
 })
 export class AuthModule {}

@@ -11,7 +11,7 @@ export class AuthController {
     const { email, password } = data;
     const user = await this.authService.signIn(email, password);
     return res.status(HttpStatus.OK).json({
-      message: 'User Logged',
+      message: 'Usuario logeado con éxito!',
       user,
     });
   }

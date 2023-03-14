@@ -8,6 +8,7 @@ import {
   JoinColumn,
   PrimaryGeneratedColumn,
   OneToMany,
+  Unique,
 } from 'typeorm';
 
 @Entity({ name: 'permisos_rol' })
@@ -18,11 +19,15 @@ export class PermisosRolEntity {
   @Column({ default: true })
   estado?: boolean;
 
-  @ManyToOne(() => RolEntity, (rol) => rol.roles_permiso)
+  @ManyToOne(() => RolEntity, (rol) => rol.roles_permiso, {
+    nullable: false,
+  })
   @JoinColumn({ name: 'rol_id' })
   rol: RolEntity;
 
-  @ManyToOne(() => PermisosEntity, (permiso) => permiso.permisos_roles)
+  @ManyToOne(() => PermisosEntity, (permiso) => permiso.permisos_roles, {
+    nullable: false,
+  })
   @JoinColumn({ name: 'permiso_id' })
   permiso: PermisosEntity;
 }

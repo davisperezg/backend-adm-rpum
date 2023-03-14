@@ -64,5 +64,6 @@ import { AuxPermisosUserEntity } from './entity/cp-recursos.user.entity';
     // ServicesUsersService,
   ],
   controllers: [ResourcesUsersController],
+  exports: [ResourcesUsersService],
 })
 export class ResourcesUsersModule {}

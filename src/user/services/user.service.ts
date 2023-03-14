@@ -1,181 +1,143 @@
-import {
-  Services_User,
-  Services_UserDocument,
-} from './../../services-users/schemas/services-user';
-import {
-  Resource_Role,
-  Resource_RoleDocument,
-} from './../../resources-roles/schemas/resources-role';
-import {
-  HttpException,
-  HttpStatus,
-  Injectable,
-  OnApplicationBootstrap,
-} from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { UpdateUserDTO } from './../dto/update-user';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { hashPassword } from 'src/lib/helpers/auth.helper';
 import { RoleService } from 'src/role/services/role.service';
-import { User, UserDocument } from '../schemas/user.schema';
-import {
-  Resource_UserDocument,
-  Resource_User,
-} from 'src/resources-users/schemas/resources-user';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from '../enitty/user.entity';
-import { Repository } from 'typeorm';
+import { Equal, Not, Repository } from 'typeorm';
 import { CreateUserDTO } from '../dto/create-user';
+import { QueryToken } from 'src/auth/dto/queryToken';
+import { ROL_PRINCIPAL } from 'src/lib/const/consts';
+import { PermisosUserEntity } from 'src/resources-users/entity/recursos-users.entity';
+import { PermisosRolEntity } from 'src/resources-roles/entity/recursos-roles.entity';
+import { ServicesUserEntity } from 'src/services-users/entity/servicios-user.entity';
 
 @Injectable()
 export class UserService {
   constructor(
-    @InjectRepository(UserEntity) private userModel: Repository<UserEntity>, // private readonly roleService: RoleService, // @InjectModel(Resource_User.name) // private ruModel: Model<Resource_UserDocument>, // @InjectModel(Services_User.name) // private suModel: Model<Services_UserDocument>, // @InjectModel(Resource_Role.name) // private rrModel: Model<Resource_RoleDocument>,
+    @InjectRepository(UserEntity) private userModel: Repository<UserEntity>,
+    @InjectRepository(PermisosUserEntity)
+    private ruModel: Repository<PermisosUserEntity>,
+    @InjectRepository(PermisosRolEntity)
+    private rrModel: Repository<PermisosRolEntity>,
+    @InjectRepository(ServicesUserEntity)
+    private suModel: Repository<ServicesUserEntity>,
     private rolService: RoleService,
   ) {}
 
-  // async onApplicationBootstrap() {
-  //   //si haz creado una proiedad en el schema y vas actulizarla en la bd con un valor en especifico usamos el siguiente código:
-
-  //   // await this.userModel.updateMany(
-  //   //   {
-  //   //     updateResource: null,
-  //   //   },
-  //   //   { updateResource: false },
-  //   // );
-
-  //   const count = await this.userModel.estimatedDocumentCount();
-
-  //   if (count > 0) return;
-
-  //   try {
-  //     const passwordHashed = await hashPassword('admin123');
-
-  //     const getRole = await this.roleService.findRoleByName(String('OWNER'));
-
-  //     setTimeout(async () => {
-  //       const count = await this.userModel.estimatedDocumentCount();
-
-  //       if (count > 0) return;
-
-  //       await this.userModel.insertMany([
-  //         {
-  //           name: 'El',
-  //           lastname: 'Duenio',
-  //           tipDocument: 'DNI',
-  //           nroDocument: '99999999',
-  //           email: 'admin@admin.com',
-  //           password: passwordHashed,
-  //           status: true,
-  //           role: getRole._id,
-  //           creator: null,
-  //         },
-  //       ]);
-  //     }, 6000);
-  //   } catch (e) {
-  //     throw new Error(`Error en UserService.onApplicationBootstrap ${e}`);
-  //   }
-  // }
-
-  async findAll(userToken?: any): Promise<any[]> {
-    // const { findUser } = userToken;
+  async findAll(userToken: QueryToken) {
+    const { tokenUsuario } = userToken;
     let users = [];
-    // if (findUser.role === 'OWNER') {
-    //   const listusers = await this.userModel.find().populate([
-    //     {
-    //       path: 'role',
-    //     },
-    //     {
-    //       path: 'creator',
-    //     },
-    //   ]);
-    //   users = listusers.filter((user) => user.role.name !== 'OWNER');
-    // } else {
-    //   users = await this.userModel.find({ creator: findUser._id }).populate([
-    //     {
-    //       path: 'role',
-    //     },
-    //     {
-    //       path: 'creator',
-    //     },
-    //   ]);
-    // }
+    if (tokenUsuario.rol.nombre === ROL_PRINCIPAL) {
+      users = await this.userModel.find({
+        select: {
+          rol: {
+            id: true,
+            nombre: true,
+          },
+          user_create: {},
+        },
+        where: {
+          rol: {
+            nombre: Not(Equal(ROL_PRINCIPAL)),
+          },
+        },
+        relations: {
+          rol: true,
+          user_create: true,
+        },
+      });
+    } else {
+      users = await this.userModel.find({
+        select: {
+          rol: {
+            id: true,
+            nombre: true,
+          },
+          user_create: {},
+        },
+        relations: {
+          rol: true,
+          user_create: true,
+        },
+        where: {
+          user_create: {
+            id: tokenUsuario.id_usuario,
+          },
+        },
+      });
+    }
 
-    // const formatUsers = users.map((user) => {
-    //   return {
-    //     _id: user._id,
-    //     name: user.name,
-    //     lastname: user.lastname,
-    //     fullname: user.name + ' ' + user.lastname,
-    //     tipDocument: user.tipDocument,
-    //     nroDocument: user.nroDocument,
-    //     status: user.status,
-    //     email: user.email,
-    //     owner: user.creator
-    //       ? user.creator.name + ' ' + user.creator.lastname
-    //       : 'Ninguno',
-    //     role: user.role.name,
-    //   };
-    // });
-    //return formatUsers;
-    return [];
+    return users;
   }
 
   async changePassword(
-    id: string,
-    data: { password: string },
-    userToken?: any,
+    id: number,
+    contrasenia: string,
+    userToken: QueryToken,
   ): Promise<boolean> {
-    // const findForbidden = await this.userModel.findById(id).populate([
-    //   {
-    //     path: 'role',
-    //   },
-    //   {
-    //     path: 'creator',
-    //   },
-    // ]);
-    // const { findUser } = userToken;
-    // const rolToken = findUser.role;
+    const { tokenUsuario, tokenEntityFull } = userToken;
 
-    // if (
-    //   (findForbidden.role.name === 'OWNER' && rolToken !== 'OWNER') ||
-    //   (findForbidden.creator.email !== findUser.email && rolToken !== 'OWNER')
-    // ) {
-    //   throw new HttpException(
-    //     {
-    //       status: HttpStatus.UNAUTHORIZED,
-    //       type: 'UNAUTHORIZED',
-    //       message: 'Unauthorized Exception',
-    //     },
-    //     HttpStatus.UNAUTHORIZED,
-    //   );
-    // }
+    const buscarProhibido = await this.userModel.findOne({
+      relations: {
+        rol: true,
+        user_create: true,
+      },
+      where: {
+        id,
+      },
+    });
 
-    // let result = false;
-    // const { password } = data;
-    // try {
-    //   const passwordHashed = await hashPassword(password);
-    //   await this.userModel.findByIdAndUpdate(
-    //     id,
-    //     { password: passwordHashed },
-    //     {
-    //       new: true,
-    //     },
-    //   );
-    //   result = true;
-    // } catch (e) {
-    //   throw new Error(`Error en UserService.changePassword ${e}`);
-    // }
-    // return result;
-    return false;
+    if (
+      (buscarProhibido.rol.nombre === ROL_PRINCIPAL &&
+        tokenUsuario.rol.nombre !== ROL_PRINCIPAL) ||
+      (buscarProhibido.user_create.email !== tokenEntityFull.email &&
+        tokenUsuario.rol.nombre !== ROL_PRINCIPAL)
+    ) {
+      throw new HttpException(
+        'Estas intentando un accion incorrecta, tomaremos su ip para nuestra seguridad',
+        HttpStatus.NOT_ACCEPTABLE,
+      );
+    }
+
+    let result = false;
+
+    try {
+      const passwordHashed = await hashPassword(contrasenia);
+      this.userModel.merge(buscarProhibido, { contrasenia: passwordHashed });
+      await this.userModel.save(buscarProhibido);
+
+      result = true;
+    } catch (e) {
+      throw new Error(`Error en UserService.changePassword.save ${e}`);
+    }
+    return result;
   }
 
-  async validarCorreoYDni(email: string, dni: string) {
-    let userExiste = {};
+  async validarCorreoYDni(
+    email: string,
+    dni: string,
+    idActualizar?: number,
+    userToken?: QueryToken,
+  ) {
+    let userExiste: any = {};
+    let userActualizar: any = {};
+
+    //const { tokenUsuario } = userToken;
 
     try {
       userExiste = await this.userModel.findOne({
-        where: [{ email: email }, { dni: dni }],
+        relations: { user_create: true },
+        where: [{ email: email ?? '' }, { dni: dni ?? '' }],
       });
+
+      if (idActualizar) {
+        userActualizar = await this.userModel.findOne({
+          where: {
+            id: idActualizar,
+          },
+        });
+      }
     } catch (e) {
       throw new HttpException(
         'Ocurrio un error al intentar crear un usuario - Informar cod_error: UserService.validarCD.findOne',
@@ -183,32 +145,54 @@ export class UserService {
       );
     }
 
+    // const buscarExistente = userExiste.find(
+    //   (a) => a.user_create.id === tokenUsuario.id_usuario,
+    // );
+    //console.log(buscarExistente);
     if (userExiste) {
       const data = userExiste as UserEntity;
-
       const nombreEncontradoDB = data.email && data.email.trim().toLowerCase();
       const dniEncontradoDB = data.dni && data.dni.trim().toLowerCase();
 
-      if (dniEncontradoDB === dni.trim().toLowerCase()) {
-        throw new HttpException(
-          `El dni del usuario ya existe`,
-          HttpStatus.BAD_REQUEST,
-        );
-      }
+      if (idActualizar) {
+        if (
+          email &&
+          nombreEncontradoDB &&
+          userExiste.id !== userActualizar.id
+        ) {
+          throw new HttpException(
+            `El email ya le pertenece a otro usuario registrado`,
+            HttpStatus.BAD_REQUEST,
+          );
+        }
+        if (dni && dniEncontradoDB && userExiste.id !== userActualizar.id) {
+          throw new HttpException(
+            `El dni ya le pertenece a otro usuario registrado`,
+            HttpStatus.BAD_REQUEST,
+          );
+        }
+      } else {
+        if (dniEncontradoDB === dni) {
+          throw new HttpException(
+            `El dni del usuario ya existe`,
+            HttpStatus.BAD_REQUEST,
+          );
+        }
 
-      if (nombreEncontradoDB === email.trim().toLowerCase()) {
-        throw new HttpException(
-          `El correo del usuario ya existe`,
-          HttpStatus.BAD_REQUEST,
-        );
+        if (nombreEncontradoDB === email) {
+          throw new HttpException(
+            `El correo del usuario ya existe`,
+            HttpStatus.BAD_REQUEST,
+          );
+        }
       }
     }
   }
 
   //Add a single user
-  async create(createUser: CreateUserDTO, userToken?: any) {
+  async create(createUser: CreateUserDTO, userToken: QueryToken) {
     const { email, rol, contrasenia, dni } = createUser;
-    // const { findUser } = userToken;
+    const { tokenUsuario, tokenEntityFull } = userToken;
 
     //Validamos si ya existe un correo y un dni
     await this.validarCorreoYDni(email, dni);
@@ -217,20 +201,18 @@ export class UserService {
 
     const obtenerRol = await this.rolService.buscarRolXId(rol);
 
-    // //Ni el owner ni otro usuario puede registrar a otro owner
-    // if (
-    //   (findUser.role !== 'OWNER' && getRole.name === 'OWNER') ||
-    //   (findUser.role === 'OWNER' && getRole.name === 'OWNER')
-    // ) {
-    //   throw new HttpException(
-    //     {
-    //       status: HttpStatus.UNAUTHORIZED,
-    //       type: 'UNAUTHORIZED',
-    //       message: 'Unauthorized Exception',
-    //     },
-    //     HttpStatus.UNAUTHORIZED,
-    //   );
-    // }
+    //Ni el owner ni otro usuario puede registrar a otro owner
+    if (
+      (tokenUsuario.rol.nombre !== ROL_PRINCIPAL &&
+        obtenerRol.nombre === ROL_PRINCIPAL) ||
+      (tokenUsuario.rol.nombre === ROL_PRINCIPAL &&
+        obtenerRol.nombre === ROL_PRINCIPAL)
+    ) {
+      throw new HttpException(
+        'Tomaremos tu direccion ip para nuestra seguridad por intentar un accion prohibida',
+        HttpStatus.NOT_ACCEPTABLE,
+      );
+    }
 
     let usuarioRegistrado = {};
 
@@ -240,7 +222,7 @@ export class UserService {
         ...createUser,
         contrasenia: contraseniaHashed,
         rol: obtenerRol,
-        //creator: findUser._id,
+        user_create: tokenEntityFull,
       };
 
       //crea usuario
@@ -253,120 +235,89 @@ export class UserService {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
-    // //busco a los recursos del rol para asignarlo al usuario
-    // const resourcesOfRol = await this.rrModel.findOne({ role: getRole._id });
 
-    // //busco los modulos del rol para asignarlo al usuario
-    // const modulesOfRol = await this.roleService.findModulesByOneRol(
-    //   String(resourcesOfRol.role),
-    // );
+    //busco a los recursos del rol para asignarlo al usuario
+    const permisosRol = await this.rrModel.find({
+      relations: {
+        rol: true,
+        permiso: true,
+      },
+      where: {
+        rol: {
+          id: obtenerRol.id,
+        },
+      },
+    });
 
-    // //data a enviar para el recurso del usuario
-    // const sendDataResource: Resource_User = {
-    //   status: true,
-    //   resource: resourcesOfRol?.resource || [],
-    //   user: createdUser._id,
-    // };
+    //crea recursos al usuario
+    permisosRol.map(async (_, i) => {
+      const suCreado = this.ruModel.create({
+        permiso: permisosRol[i].permiso,
+        user: usuarioRegistrado as UserEntity,
+      });
 
-    // const sendDataSu: Services_User = {
-    //   status: true,
-    //   user: createdUser._id,
-    //   module: modulesOfRol.module,
-    // };
+      await this.ruModel.save(suCreado);
+    });
 
-    // //crea recursos al usuario
-    // await new this.ruModel(sendDataResource).save();
+    //busco los modulos del rol para asignarlo al usuario
+    const modulesOfRol = await this.rolService.findModulesByOneRol(
+      obtenerRol.id,
+    );
 
-    // //crea modulos al usuario
-    // await new this.suModel(sendDataSu).save();
+    //crea modulos al usuario
+    modulesOfRol.modulos.map(async (_, i) => {
+      const suCreado = this.suModel.create({
+        modulos: modulesOfRol.modulos[i],
+        user: usuarioRegistrado as UserEntity,
+      });
 
-    // return createdUser.save();
+      await this.suModel.save(suCreado);
+    });
+
     return usuarioRegistrado;
   }
 
   //Put a single user
-  async update(id: string, bodyUser: User, userToken?: any): Promise<User> {
-    // const { status, role, password, nroDocument, email } = bodyUser;
-    // const { findUser } = userToken;
-    // const rolToken = findUser.role;
-    // const findForbidden = await this.userModel.findById(id).populate([
-    //   {
-    //     path: 'role',
-    //   },
-    //   {
-    //     path: 'creator',
-    //   },
-    // ]);
+  async update(id: number, bodyUser: UpdateUserDTO, userToken: QueryToken) {
+    const { rol, email, dni } = bodyUser;
+    const { tokenUsuario, tokenEntityFull } = userToken;
 
-    // //validar que el nro de documento o email actualizados no pertenezcan a otro usuario
-    // const findNroDocument = await this.userModel.findOne({ nroDocument });
-    // const findEmail = await this.userModel.findOne({ email });
-    // const getRoleOfBody = await this.roleService.findRoleById(String(role));
-    // if (
-    //   findNroDocument &&
-    //   String(findNroDocument._id).toLowerCase() !==
-    //     String(findForbidden._id).toLowerCase()
-    // ) {
-    //   throw new HttpException(
-    //     {
-    //       status: HttpStatus.BAD_REQUEST,
-    //       type: 'BAD_REQUEST',
-    //       message:
-    //         'El nro de documento ya le pertenece a otro usuario registrado.',
-    //     },
-    //     HttpStatus.BAD_REQUEST,
-    //   );
-    // }
+    const usuario = await this.findUserById(id);
 
-    // if (
-    //   findEmail &&
-    //   String(findEmail._id).toLowerCase() !==
-    //     String(findForbidden._id).toLowerCase()
-    // ) {
-    //   throw new HttpException(
-    //     {
-    //       status: HttpStatus.BAD_REQUEST,
-    //       type: 'BAD_REQUEST',
-    //       message:
-    //         'El username o email ya le pertenece a otro usuario registrado.',
-    //     },
-    //     HttpStatus.BAD_REQUEST,
-    //   );
-    // }
+    //Validamos si ya existe un correo y un dni
+    if (email || dni) await this.validarCorreoYDni(email, dni, id);
 
-    // //el usuario no puede actualizar otro rol a owner o si encuentra que el usuario del owner esta siendo modificado tampoco puede actualizar
-    // if (
-    //   (findForbidden.role.name === 'OWNER' && rolToken !== 'OWNER') ||
-    //   (findForbidden.creator.email !== findUser.email &&
-    //     rolToken !== 'OWNER') ||
-    //   (getRoleOfBody.name === 'OWNER' && rolToken !== 'OWNER') ||
-    //   (getRoleOfBody.name === 'OWNER' && rolToken === 'OWNER')
-    // ) {
-    //   throw new HttpException(
-    //     {
-    //       status: HttpStatus.UNAUTHORIZED,
-    //       type: 'UNAUTHORIZED',
-    //       message: 'Unauthorized Exception',
-    //     },
-    //     HttpStatus.UNAUTHORIZED,
-    //   );
-    // }
+    const buscarRol = rol
+      ? await this.rolService.buscarRolXId(rol)
+      : usuario.rol;
 
-    // const modifyData: User = {
-    //   ...bodyUser,
-    //   role: role,
-    // };
+    //el usuario no puede actualizar otro rol a owner o si encuentra que el usuario del owner esta siendo modificado tampoco puede actualizar
+    if (
+      (usuario.rol.nombre === ROL_PRINCIPAL &&
+        tokenUsuario.rol.nombre !== ROL_PRINCIPAL) ||
+      (buscarRol.nombre === ROL_PRINCIPAL &&
+        tokenUsuario.rol.nombre !== ROL_PRINCIPAL) ||
+      (buscarRol.nombre === ROL_PRINCIPAL &&
+        tokenUsuario.rol.nombre === ROL_PRINCIPAL)
+    ) {
+      throw new HttpException(
+        'Esta intentado un accion incorrecta, capturaremos tu ip para nuestra seguridad',
+        HttpStatus.NOT_ACCEPTABLE,
+      );
+    }
 
-    // return await this.userModel.findByIdAndUpdate(id, modifyData, {
-    //   new: true,
-    // });
-    return;
+    this.userModel.merge(usuario, {
+      ...bodyUser,
+      rol: buscarRol,
+      user_update: tokenEntityFull,
+    });
+    return await this.userModel.save(usuario);
   }
 
   //Delete a single user
-  async delete(id: number, user?: any): Promise<boolean> {
+  async delete(id: number, user: QueryToken): Promise<boolean> {
     let result = false;
-    // const { findUser } = user;
+    const { tokenUsuario, tokenEntityFull } = user;
     // const rolToken = findUser.role;
 
     const dataUsuario = await this.buscarUsuarioXIdXEstado(id, true);
@@ -376,24 +327,26 @@ export class UserService {
         HttpStatus.NOT_ACCEPTABLE,
       );
 
-    // //Ni el owner ni cualquier otro usuario puede eliminar al owner
-    // if (
-    //   (findForbidden.role.name === 'OWNER' && rolToken !== 'OWNER') ||
-    //   (findForbidden.role.name === 'OWNER' && rolToken === 'OWNER') ||
-    //   (findForbidden.creator.email !== findUser.email && rolToken !== 'OWNER')
-    // ) {
-    //   throw new HttpException(
-    //     {
-    //       status: HttpStatus.UNAUTHORIZED,
-    //       type: 'UNAUTHORIZED',
-    //       message: 'Unauthorized Exception',
-    //     },
-    //     HttpStatus.UNAUTHORIZED,
-    //   );
-    // }
+    //Ni el owner ni cualquier otro usuario puede eliminar al owner
+    if (
+      (dataUsuario.rol.nombre === ROL_PRINCIPAL &&
+        tokenUsuario.rol.nombre !== ROL_PRINCIPAL) ||
+      (dataUsuario.rol.nombre === ROL_PRINCIPAL &&
+        tokenUsuario.rol.nombre === ROL_PRINCIPAL) ||
+      (dataUsuario.user_create.email !== tokenEntityFull.email &&
+        tokenUsuario.rol.nombre !== ROL_PRINCIPAL)
+    ) {
+      throw new HttpException(
+        'Accion incorrecta tomaremos tu ip para mayor seguridad',
+        HttpStatus.NOT_ACCEPTABLE,
+      );
+    }
 
     try {
-      this.userModel.merge(dataUsuario, { estado: false });
+      this.userModel.merge(dataUsuario, {
+        estado: false,
+        user_delete: tokenEntityFull,
+      });
 
       await this.userModel.save(dataUsuario);
 
@@ -409,8 +362,8 @@ export class UserService {
   }
 
   //Restore a single user
-  async restore(id: number, userToken?: any): Promise<boolean> {
-    // const { findUser } = userToken;
+  async restore(id: number, userToken: QueryToken): Promise<boolean> {
+    const { tokenUsuario, tokenEntityFull } = userToken;
     // const rolToken = findUser.role;
     let result = false;
 
@@ -421,24 +374,26 @@ export class UserService {
         HttpStatus.NOT_ACCEPTABLE,
       );
 
-    // //Ni el owner ni cualquier otro usuario permite retaurar al owner
-    // if (
-    //   (findForbidden.role.name === 'OWNER' && rolToken !== 'OWNER') ||
-    //   (findForbidden.role.name === 'OWNER' && rolToken === 'OWNER') ||
-    //   (findForbidden.creator.email !== findUser.email && rolToken !== 'OWNER')
-    // ) {
-    //   throw new HttpException(
-    //     {
-    //       status: HttpStatus.UNAUTHORIZED,
-    //       type: 'UNAUTHORIZED',
-    //       message: 'Unauthorized Exception',
-    //     },
-    //     HttpStatus.UNAUTHORIZED,
-    //   );
-    // }
+    //Ni el owner ni cualquier otro usuario permite retaurar al owner
+    if (
+      (dataUsuario.rol.nombre === ROL_PRINCIPAL &&
+        tokenUsuario.rol.nombre !== ROL_PRINCIPAL) ||
+      (dataUsuario.rol.nombre === ROL_PRINCIPAL &&
+        tokenUsuario.rol.nombre === ROL_PRINCIPAL) ||
+      (dataUsuario.user_create.email !== tokenEntityFull.email &&
+        tokenUsuario.rol.nombre !== ROL_PRINCIPAL)
+    ) {
+      throw new HttpException(
+        'Estas intentado una accion incorrecta tomaremos tu ip para nuestra seguridad',
+        HttpStatus.NOT_ACCEPTABLE,
+      );
+    }
 
     try {
-      this.userModel.merge(dataUsuario, { estado: true });
+      this.userModel.merge(dataUsuario, {
+        estado: true,
+        user_restore: tokenEntityFull,
+      });
       await this.userModel.save(dataUsuario);
       result = true;
     } catch (e) {
@@ -457,29 +412,32 @@ export class UserService {
     return;
   }
 
-  //find user by id
-  async findUserById(id: string): Promise<any> {
-    // return await this.userModel.findById(id).populate([
-    //   {
-    //     path: 'role',
-    //     populate: [
-    //       {
-    //         path: 'module',
-    //         populate: [{ path: 'menu' }],
-    //       },
-    //     ],
-    //   },
-    //   {
-    //     path: 'creator',
-    //     populate: {
-    //       path: 'role',
-    //       populate: {
-    //         path: 'module',
-    //       },
-    //     },
-    //   },
-    // ]);
-    return {};
+  //find user by id to jwt.strategies
+  async findUserById(id: number): Promise<UserEntity> {
+    let result = {};
+
+    try {
+      result = await this.userModel.findOne({
+        relations: ['rol', 'user_create'],
+        where: {
+          id,
+        },
+      });
+    } catch (e) {
+      throw new HttpException(
+        'Ocurrio un error al intentar obtener un usuario - Informar cod_error: UsuarioService.findUserById.find',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+
+    if (!result) {
+      throw new HttpException(
+        'No se encontro un usuario válido',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    return result as UserEntity;
   }
 
   //find user by nroDocument

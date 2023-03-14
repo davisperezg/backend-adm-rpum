@@ -13,6 +13,8 @@ import {
   JoinTable,
   OneToOne,
   JoinColumn,
+  BeforeUpdate,
+  BeforeInsert,
 } from 'typeorm';
 
 @Entity({ name: 'modulos' })
@@ -76,15 +78,26 @@ export class ModuloEntity {
   aux_modulos_service?: AuxServicesUserEntity[];
 
   //Referencia a usuarios
-  @OneToOne(() => UserEntity)
+  @ManyToOne(() => UserEntity, (user) => user.modulo_create)
   @JoinColumn({ name: 'user_create' })
   user_create?: UserEntity;
 
-  @OneToOne(() => UserEntity)
+  @ManyToOne(() => UserEntity, (user) => user.modulo_delete)
   @JoinColumn({ name: 'user_delete' })
   user_delete?: UserEntity;
 
-  @OneToOne(() => UserEntity)
+  @ManyToOne(() => UserEntity, (user) => user.modulo_update)
   @JoinColumn({ name: 'user_update' })
   user_update?: UserEntity;
+
+  @BeforeUpdate()
+  @BeforeInsert()
+  trimProperties() {
+    for (const key in this) {
+      const value = this[key as keyof this];
+      if (typeof value === 'string') {
+        this[key as keyof this] = value.trim() as any;
+      }
+    }
+  }
 }

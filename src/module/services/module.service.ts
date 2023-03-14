@@ -16,10 +16,11 @@ import { ServicesUsersService } from 'src/services-users/services/services-users
 import { UserService } from 'src/user/services/user.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ModuloEntity } from '../entity/modulo.entity';
-import { Repository, In } from 'typeorm';
+import { Repository, In, IsNull } from 'typeorm';
 import { CreateModuloDTO } from '../dto/create-modulo';
 import { QueryModulo } from '../dto/query-modulo';
 import { MOD_PRINCIPAL, ROL_PRINCIPAL } from 'src/lib/const/consts';
+import { QueryToken } from 'src/auth/dto/queryToken';
 
 @Injectable()
 export class ModuleService {
@@ -33,147 +34,79 @@ export class ModuleService {
     @InjectRepository(ModuloEntity)
     private moduleModel: Repository<ModuloEntity>,
     private menuService: MenuService,
+    private suService: ServicesUsersService, //@Inject(forwardRef(() => UserService)) //private userService: UserService,
   ) {}
 
-  // async onApplicationBootstrap() {
-  //   const count = await this.moduleModel.estimatedDocumentCount();
-  //   if (count > 0) return;
-  //   try {
-  //     //ADD MODULES
-  //     const getMenus = await this.menuService.findbyName([
-  //       'Usuarios',
-  //       'Roles',
-  //       'Modulos',
-  //       'Permisos',
-  //     ]);
+  //lista los modulos
+  async findAll(user: QueryToken, create?: boolean) {
+    const { tokenBkUsuario } = user;
+    let modulos = [];
 
-  //     const findMenus = getMenus.map((men) => men._id);
+    if (tokenBkUsuario.rol.nombre === ROL_PRINCIPAL) {
+      modulos = await this.moduleModel.find({
+        select: {
+          menus: {
+            id: true,
+            nombre: true,
+          },
+        },
+        relations: ['user_create', 'menus'],
+        where: [
+          {
+            user_create: IsNull(),
+          },
+          {
+            user_create: {
+              id: tokenBkUsuario.creado_por
+                ? tokenBkUsuario.creado_por.id_usuario
+                : IsNull(),
+            },
+          },
+        ],
+      });
 
-  //     await Promise.all([
-  //       new this.moduleModel({
-  //         name: 'Administración de sistema - PRINCIPAL',
-  //         status: true,
-  //         menu: findMenus,
-  //         creator: null,
-  //       }).save(),
-  //       new this.moduleModel({
-  //         name: 'Perfiles',
-  //         status: true,
-  //         creator: null,
-  //       }).save(),
-  //       new this.moduleModel({
-  //         name: 'Tickets',
-  //         status: true,
-  //         creator: null,
-  //       }).save(),
-  //     ]);
+      if (create) {
+        modulos = modulos.map((a) => {
+          if (a.nombre === MOD_PRINCIPAL) {
+            return {
+              label: a.nombre,
+              value: a.id,
+              disabled: true,
+            };
+          } else {
+            return {
+              label: a.nombre,
+              value: a.id,
+              disabled: a.estado ? false : true,
+            };
+          }
+        });
+      }
 
-  //     //ADD ROL
-  //     const getModules = await this.findbyNames([
-  //       'Administración de sistema - PRINCIPAL',
-  //       'Perfiles',
-  //       'Tickets',
-  //     ]);
+      return modulos;
+    } else {
+      const modulosStandar: any[] = await this.moduleModel.find({
+        relations: ['user_create', 'menus'],
+        where: {
+          user_create: {
+            id: tokenBkUsuario.creado_por.id_usuario,
+          },
+        },
+      });
+      const modulosAsignados: any[] = await this.suService.findModulesByUser(
+        tokenBkUsuario.id_usuario,
+      );
 
-  //     await Promise.all([
-  //       new this.roleModel({
-  //         name: 'OWNER',
-  //         status: true,
-  //         module: getModules,
-  //         creator: null,
-  //       }).save(),
-  //     ]);
+      if (create) {
+        modulos = modulosAsignados.concat(modulosStandar).map((mod) => ({
+          label: mod.nombre,
+          value: mod.id,
+          disabled: mod.estado ? false : true,
+        }));
+      }
 
-  //     const findOwner = await this.roleModel.findOne({ name: 'OWNER' });
-
-  //     setTimeout(async () => {
-  //       const findUser = await this.userService.findUserByIdRol(findOwner._id);
-  //       const dataUser = {
-  //         user: findUser._id,
-  //         module: getModules,
-  //       };
-
-  //       await this.suService.create(dataUser);
-  //     }, 15000);
-  //   } catch (e) {
-  //     throw new Error(`Error en ModuleService.onModuleInit ${e}`);
-  //   }
-  // }
-
-  //lista los modulos en roles
-  async findAll(user?: any): Promise<Module[] | any> {
-    //   const { findUser } = user;
-    //   let formated = [];
-    //   if (findUser.role === 'OWNER') {
-    //     const modules = await this.moduleModel
-    //       .find({
-    //         $or: [{ creator: findUser._id }, { creator: null }],
-    //       })
-    //       .populate({
-    //         path: 'menu',
-    //       });
-
-    //     formated = modules
-    //       .map((mod) => {
-    //         if (mod.name === 'Administración de sistema - PRINCIPAL') {
-    //           return {
-    //             label: mod.name,
-    //             value: mod._id,
-    //             disabled: true,
-    //           };
-    //         } else {
-    //           return {
-    //             label: mod.name,
-    //             value: mod._id,
-    //             disabled: mod.status ? false : true,
-    //           };
-    //         }
-    //       })
-    //       .sort((a, b) => {
-    //         if (a > b) {
-    //           return 1;
-    //         }
-    //         if (a < b) {
-    //           return -1;
-    //         }
-    //         // a must be equal to b
-    //         return 0;
-    //       });
-    //   } else {
-    //     const modulesCreateds = await this.moduleModel
-    //       .find({
-    //         creator: findUser._id,
-    //       })
-    //       .populate({
-    //         path: 'menu',
-    //       });
-
-    //     const myModulesAssigneds = await this.suService.findModulesByUser(
-    //       findUser._id,
-    //     );
-
-    //     const modules = myModulesAssigneds.concat(modulesCreateds);
-
-    //     formated = modules
-    //       .map((mod) => ({
-    //         label: mod.name,
-    //         value: mod._id,
-    //         disabled: mod.status ? false : true,
-    //       }))
-    //       .sort((a, b) => {
-    //         if (a > b) {
-    //           return 1;
-    //         }
-    //         if (a < b) {
-    //           return -1;
-    //         }
-    //         // a must be equal to b
-    //         return 0;
-    //       });
-    //   }
-
-    //   return formated;
-    return;
+      return modulos;
+    }
   }
 
   // //lista los modulos en el crud
@@ -320,11 +253,15 @@ export class ModuleService {
     }
   }
 
-  async validarExisteRepetidos(nombre: string, link: string) {
-    let moduloExiste = {};
+  async validarExisteRepetidos(nombre: string, link: string, user: QueryToken) {
+    let moduloExiste: any[] = [];
+    const { tokenBkUsuario } = user;
 
     try {
-      moduloExiste = await this.moduleModel.findOne({
+      moduloExiste = await this.moduleModel.find({
+        relations: {
+          user_create: true,
+        },
         where: [{ nombre: nombre }, { link: link }],
       });
     } catch (e) {
@@ -334,8 +271,14 @@ export class ModuleService {
       );
     }
 
-    if (moduloExiste) {
-      const data = moduloExiste as ModuloEntity;
+    const usuarioRegistrando = tokenBkUsuario.id_usuario;
+
+    const buscarModulosExistente = moduloExiste.find(
+      (a) => a.user_create.id === usuarioRegistrando,
+    );
+
+    if (moduloExiste.length > 0 && buscarModulosExistente) {
+      const data = buscarModulosExistente as ModuloEntity;
 
       const nombreEncontradoDB =
         data.nombre && data.nombre.trim().toLowerCase();
@@ -366,11 +309,11 @@ export class ModuleService {
   }
 
   // //Add a single module
-  async create(createModulo: CreateModuloDTO, user?: any) {
+  async create(createModulo: CreateModuloDTO, user: QueryToken) {
     const { nombre, menus, color, detalle, icon, link } = createModulo;
-    //   const { findUser } = user;
+    const { tokenUsuario, tokenEntityFull } = user;
 
-    await this.validarExisteRepetidos(nombre, link);
+    await this.validarExisteRepetidos(nombre, link, user);
 
     //Validar de que cada usuario puede tener un modulo propio
     //quiere decir que user1 puede tener mod1 y user2 tambien mod1
@@ -389,6 +332,8 @@ export class ModuleService {
       nuevoModulo.icon = icon;
       nuevoModulo.link = link;
       nuevoModulo.menus = listaMenus;
+      nuevoModulo.user_create = tokenEntityFull;
+
       return await this.moduleModel.save(nuevoModulo);
     } catch (e) {
       throw new HttpException(

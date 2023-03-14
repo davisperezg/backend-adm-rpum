@@ -29,6 +29,9 @@ import { ServicesUsersService } from 'src/services-users/services/services-users
 import { ModuloEntity } from './entity/modulo.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MenuModule } from 'src/menu/menu.module';
+import { ServicesUsersModule } from 'src/services-users/services-users.module';
+import { UserModule } from 'src/user/user.module';
+import { forwardRef } from '@nestjs/common/utils';
 
 @Module({
   imports: [
@@ -44,6 +47,7 @@ import { MenuModule } from 'src/menu/menu.module';
     // ]),
     TypeOrmModule.forFeature([ModuloEntity]),
     MenuModule,
+    ServicesUsersModule,
   ],
   controllers: [ModuleController],
   providers: [

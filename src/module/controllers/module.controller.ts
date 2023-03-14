@@ -20,6 +20,8 @@ import Permission from 'src/lib/type/permission.type';
 import { Module } from '../schemas/module.schema';
 import { ModuleService } from '../services/module.service';
 import { Request } from 'express';
+import { QueryToken } from 'src/auth/dto/queryToken';
+import { QueryListModulo } from '../dto/query-list';
 
 //base: http://localhost:3000/api/v1/modules
 @Controller('api/v1/modulos')
@@ -28,36 +30,38 @@ export class ModuleController {
 
   // Get Modules: http://localhost:3000/api/v1/modules
   @Get()
-  //@UseGuards(PermissionGuard(Permission.ReadModuleItem))
-  getModules() {
-    //@CtxUser() user: any
-    return this.moduleService.findAll();
+  @UseGuards(
+    PermissionGuard([Permission.ReadModules || Permission.CreateRoles]),
+  )
+  getModules(@CtxUser() user: QueryToken, @Body() body?: QueryListModulo) {
+    const { create } = body;
+    return this.moduleService.findAll(user, create);
   }
 
   // Get Modules: http://localhost:3000/api/v1/modules/list
-  @Get('/list')
+  //@Get('/list')
   //@UseGuards(PermissionGuard(Permission.ReadModuleList))
-  getModulesList() {
-    //@CtxUser() user: any
-    return this.moduleService.listModules();
-  }
+  // getModulesList() {
+  //   //@CtxUser() user: any
+  //   return this.moduleService.listModules();
+  // }
 
-  // Get Module: http://localhost:3000/api/v1/modules/find/6223169df6066a084cef08c2
-  @Get(':id')
-  //@UseGuards(PermissionGuard(Permission.GetOneModule))
-  getModule(@Param('id') id: number) {
-    return this.moduleService.buscarModuloXid(id);
-  }
+  // Get Module: http://localhost:3000/api/v1/modules/1
+  // @Get(':id')
+  // //@UseGuards(PermissionGuard(Permission.GetOneModule))
+  // getModule(@Param('id') id: number) {
+  //   return this.moduleService.buscarModuloXid(id);
+  // }
 
   // Add Module(POST): http://localhost:3000/api/v1/modules
   @Post()
-  //@UseGuards(PermissionGuard(Permission.CreateModule))
-  async createMenu(
+  @UseGuards(PermissionGuard(Permission.CreateModules))
+  async createModulo(
     @Res() res,
     @Body() createModule: CreateModuloDTO,
-    //@CtxUser() user: any,
+    @CtxUser() user: QueryToken,
   ) {
-    const response = await this.moduleService.create(createModule);
+    const response = await this.moduleService.create(createModule, user);
     return res.status(201).json(response);
   }
 

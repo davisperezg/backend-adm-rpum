@@ -32,6 +32,9 @@ import { Menu, MenuSchema } from 'src/menu/schemas/menu.schema';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserEntity } from './enitty/user.entity';
 import { RoleModule } from 'src/role/role.module';
+import { PermisosUserEntity } from 'src/resources-users/entity/recursos-users.entity';
+import { PermisosRolEntity } from 'src/resources-roles/entity/recursos-roles.entity';
+import { ServicesUserEntity } from 'src/services-users/entity/servicios-user.entity';
 
 @Module({
   imports: [
@@ -45,7 +48,12 @@ import { RoleModule } from 'src/role/role.module';
     //   { name: Menu.name, schema: MenuSchema },
     //   { name: ModuleEntity.name, schema: ModuleSchema },
     // ]),
-    TypeOrmModule.forFeature([UserEntity]),
+    TypeOrmModule.forFeature([
+      UserEntity,
+      PermisosUserEntity,
+      PermisosRolEntity,
+      ServicesUserEntity,
+    ]),
     RoleModule,
   ],
   controllers: [UserController],
@@ -56,5 +64,6 @@ import { RoleModule } from 'src/role/role.module';
     // MenuService,
     // ServicesUsersService,
   ],
+  exports: [UserService],
 })
 export class UserModule {}

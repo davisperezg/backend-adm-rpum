@@ -29,47 +29,8 @@ export class ResourcesUsersService {
     @InjectRepository(PermisosUserEntity)
     private ruModel: Repository<PermisosUserEntity>,
     @InjectRepository(AuxPermisosUserEntity)
-    private copyRuModel: Repository<AuxPermisosUserEntity>,
-  ) // @InjectModel(Resource_User.name)
-  // private ruModel: Model<Resource_UserDocument>,
-  // @InjectModel(CopyResource_User.name)
-  // private copyRuModel: Model<CopyResource_UserDocument>,
-  // private readonly resourceService: ResourceService,
-  // private readonly roleService: RoleService,
-  // private readonly userService: UserService,
-  {}
-
-  // async onApplicationBootstrap() {
-  //   const count = await this.ruModel.estimatedDocumentCount();
-  //   if (count > 0) return;
-  //   try {
-  //     const findResources = await this.resourceService.findResourceByKey(
-  //       resourcesByDefault.map((res) => res.key),
-  //     );
-
-  //     const getIdsResources = findResources.map((res) => res._id);
-
-  //     setTimeout(async () => {
-  //       const count = await this.ruModel.estimatedDocumentCount();
-  //       if (count > 0) return;
-  //       const getRoleOwner = await this.roleService.findRoleByName(
-  //         String('OWNER'),
-  //       );
-
-  //       const findUserByRol = await this.userService.findUserByIdRol(
-  //         getRoleOwner._id,
-  //       );
-
-  //       await new this.ruModel({
-  //         user: findUserByRol._id,
-  //         resource: getIdsResources,
-  //         status: true,
-  //       }).save();
-  //     }, 10000);
-  //   } catch (e) {
-  //     throw new Error(`Error en RUService.onModuleInit ${e}`);
-  //   }
-  // }
+    private copyRuModel: Repository<AuxPermisosUserEntity>, // @InjectModel(Resource_User.name) // private ruModel: Model<Resource_UserDocument>, // @InjectModel(CopyResource_User.name) // private copyRuModel: Model<CopyResource_UserDocument>, // private readonly resourceService: ResourceService, // private readonly roleService: RoleService, // private readonly userService: UserService,
+  ) {}
 
   async findAll() {
     // const resources = await this.ruModel
@@ -82,18 +43,20 @@ export class ResourcesUsersService {
     return [];
   }
 
-  async findOneResourceByUser(idUser: string) {
-    // const resourcesOfUser = await this.ruModel
-    //   .findOne({ status: true, user: idUser as any })
-    //   .populate({ path: 'resource' });
+  async findOneResourceByUser(idUser: number) {
+    const permisos = await this.ruModel.find({
+      relations: ['permiso'],
+      where: {
+        estado: true,
+        user: {
+          id: idUser,
+        },
+      },
+    });
 
-    // const formatToFront = {
-    //   ...resourcesOfUser,
-    //   resource: resourcesOfUser.resource.map((res: any) => res._doc.key),
-    // };
+    const keys = permisos.map((a) => a.permiso.key);
 
-    // return formatToFront.resource;
-    return [];
+    return keys;
   }
 
   //Add a single role

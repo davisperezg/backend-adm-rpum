@@ -8,12 +8,12 @@ import {
   Column,
   Entity,
   JoinColumn,
-  JoinTable,
-  ManyToMany,
   ManyToOne,
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
+  BeforeInsert,
+  BeforeUpdate,
 } from 'typeorm';
 
 @Entity({ name: 'users' })
@@ -33,7 +33,7 @@ export class UserEntity {
   @Column({ length: 150 })
   email: string;
 
-  @Column({ length: 200 })
+  @Column({ length: 200, select: false })
   contrasenia: string;
 
   @Column({ length: 9 })
@@ -64,7 +64,9 @@ export class UserEntity {
   @Column({ type: 'datetime', nullable: true })
   deletedAt?: Date;
 
-  @ManyToOne(() => RolEntity, (rol) => rol.usuarios)
+  @ManyToOne(() => RolEntity, (rol) => rol.usuarios, {
+    nullable: false,
+  })
   @JoinColumn({ name: 'rol_id' })
   rol: RolEntity;
 
@@ -89,17 +91,21 @@ export class UserEntity {
   rol_update: RolEntity;
 
   //Referencia a si mismo
-  @OneToOne(() => UserEntity, { nullable: true })
+  @ManyToOne(() => UserEntity, { nullable: true })
   @JoinColumn({ name: 'user_create' })
   user_create?: UserEntity;
 
-  @OneToOne(() => UserEntity, { nullable: true })
+  @ManyToOne(() => UserEntity)
   @JoinColumn({ name: 'user_delete' })
   user_delete?: UserEntity;
 
-  @OneToOne(() => UserEntity, { nullable: true })
+  @ManyToOne(() => UserEntity)
   @JoinColumn({ name: 'user_update' })
   user_update?: UserEntity;
+
+  @ManyToOne(() => UserEntity)
+  @JoinColumn({ name: 'user_restore' })
+  user_restore?: UserEntity;
 
   //Referencia a user x services_users
   @OneToMany(() => ServicesUserEntity, (service) => service.user)
@@ -116,4 +122,17 @@ export class UserEntity {
   //Referencia a user x aux_permisos_users
   @OneToMany(() => AuxPermisosUserEntity, (service) => service.user)
   aux_users_permiso?: AuxPermisosUserEntity[];
+
+  @BeforeUpdate()
+  @BeforeInsert()
+  trimProperties() {
+    //const propertiesToExclude = ['no_trim_1', 'no_trim_2'];
+    for (const key in this) {
+      const value = this[key as keyof this];
+      //typeof value === 'string' && !propertiesToExclude.includes(key)
+      if (typeof value === 'string') {
+        this[key as keyof this] = value.trim() as any;
+      }
+    }
+  }
 }

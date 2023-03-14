@@ -18,9 +18,13 @@ import { Model } from 'mongoose';
 import { UserService } from 'src/user/services/user.service';
 import { ModuleService } from 'src/module/services/module.service';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { ServicesUserEntity } from '../entity/servicios-user.entity';
 import { AuxServicesUserEntity } from '../entity/cp-servicios.user.entity';
+import { UserEntity } from 'src/user/enitty/user.entity';
+import { ServiceUserDTO } from '../dto/create-su';
+import { ModuloEntity } from 'src/module/entity/modulo.entity';
+import { MOD_PRINCIPAL } from 'src/lib/const/consts';
 
 @Injectable()
 export class ServicesUsersService {
@@ -28,215 +32,213 @@ export class ServicesUsersService {
     @InjectRepository(ServicesUserEntity)
     private suModel: Repository<ServicesUserEntity>,
     @InjectRepository(AuxServicesUserEntity)
-    private copySuModel: Repository<AuxServicesUserEntity>, // @InjectModel(Services_User.name)
+    private copySuModel: Repository<AuxServicesUserEntity>,
+    @InjectRepository(UserEntity)
+    private readonly userRepository: Repository<UserEntity>,
+    @InjectRepository(ModuloEntity)
+    private readonly moduloRepository: Repository<ModuloEntity>, // @InjectModel(Services_User.name)
   ) {} // private suModel: Model<Services_UserDocument>,
-  // private readonly userService: UserService,
+
   // @Inject(forwardRef(() => ModuleService))
   // private readonly moduleService: ModuleService,
   // @InjectModel(CopyServices_User.name)
   // private copySuModel: Model<CopyServicesDocument>,
 
-  async findModulesByUser(
-    idUser: string,
-  ): Promise<Services_UserDocument[] | any> {
-    // const modulesOfUser = await this.suModel
-    //   .findOne({ status: true, user: idUser as any })
-    //   .populate({ path: 'module', populate: { path: 'menu' } });
+  async findModulesByUser(idUser: number) {
+    const users_modulos = await this.suModel.find({
+      select: {
+        id: false,
+        user: {},
+        modulos: {
+          id: true,
+          nombre: true,
+          estado: true,
+          menus: {
+            id: true,
+            nombre: true,
+            link: true,
+          },
+        },
+      },
+      relations: {
+        user: true,
+        modulos: {
+          menus: true,
+        },
+      },
+      where: {
+        user: { id: idUser },
+        estado: true,
+      },
+    });
 
-    // const formatToFront =
-    //   modulesOfUser?.module.map((res: any) => ({
-    //     _id: res._id,
-    //     name: res.name,
-    //     menus: res.menu.map((men) => ({
-    //       _id: men._id,
-    //       name: men.name,
-    //       link: men.link,
-    //     })),
-    //     status: res.status,
-    //   })) || [];
+    const propiedadesAQuitar = ['estado', 'id'];
 
-    // return formatToFront;
-    return;
+    const nuevoArray = users_modulos.map((a) => {
+      propiedadesAQuitar.forEach((b) => delete a[b]);
+      return a;
+    });
+
+    return nuevoArray;
   }
 
   //Add a single module_user
-  async create(createSU: Services_User) {
-    // const { user, module } = createSU;
+  async create(createSU: ServiceUserDTO) {
+    const { user, modulos } = createSU;
 
-    // if (!user || !module) {
-    //   throw new HttpException(
-    //     {
-    //       status: HttpStatus.BAD_REQUEST,
-    //       type: 'BAD_REQUEST',
-    //       message: `Los campos usuario y modulos son requeridos.`,
-    //     },
-    //     HttpStatus.BAD_REQUEST,
-    //   );
-    // }
+    const findIfExisteUser = await this.userRepository.findOne({
+      where: {
+        id: user,
+      },
+    });
 
-    // const findIfExisteUser = await this.userService.findUserById(String(user));
-    // if (!findIfExisteUser) {
-    //   throw new HttpException(
-    //     {
-    //       status: HttpStatus.BAD_REQUEST,
-    //       type: 'BAD_REQUEST',
-    //       message: `El usuario no existe.`,
-    //     },
-    //     HttpStatus.BAD_REQUEST,
-    //   );
-    // }
+    if (!findIfExisteUser) {
+      throw new HttpException('El usuario no existe', HttpStatus.BAD_REQUEST);
+    }
 
-    // //buscar modulos de usuario existente
-    // const isExistsSU = await this.suModel.findOne({ user: user });
-    // if (isExistsSU) {
-    //   const bodyExists = {
-    //     ...createSU,
-    //     user,
-    //     module,
-    //   };
+    //buscar modulos de usuario existente
+    const isExistsSU = await this.suModel.findOne({
+      where: {
+        user: {
+          id: user,
+        },
+      },
+    });
 
-    //   return await this.update(isExistsSU._id, bodyExists);
-    // }
+    if (isExistsSU) {
+      const bodyExists = {
+        ...createSU,
+        user,
+        modulos,
+      };
 
-    // //formateo el tipo de datos para string[]
-    // const moduleInput: string[] = Object.keys(module).map((res) => module[res]);
+      return await this.update(isExistsSU.id, bodyExists);
+    }
 
-    // //busca modulos existentes por ids desde el schema modules
-    // const findModulesBody = await this.moduleService.findModulesIds(
-    //   moduleInput,
-    // );
+    const findModulesBody = await this.moduloRepository.find({
+      where: {
+        id: In(modulos),
+      },
+    });
 
-    // //preparo la data
-    // const modifyData: Services_User = {
-    //   ...createSU,
-    //   status: true,
-    //   module: findModulesBody,
-    // };
+    findModulesBody.map(async (a, i) => {
+      const crear = this.suModel.create({
+        user: findIfExisteUser,
+        modulos: findModulesBody[i],
+      });
+      await this.suModel.save(crear);
+    });
 
-    // //inserto la data para el modulo del usuario
-    // const createdResource = new this.suModel(modifyData);
-
-    // return createdResource.save();
     return;
   }
 
-  async update(id: string, bodySU: Services_User) {
-    // const { status, user, module: modulesBody } = bodySU;
+  async update(id: number, bodySU: ServiceUserDTO) {
+    const { user, modulos } = bodySU;
 
-    // let findServiceToData;
-    // //no se permite el ingreso del estado
-    // if (status === true || status === false) {
-    //   throw new HttpException(
-    //     {
-    //       status: HttpStatus.UNAUTHORIZED,
-    //       type: 'UNAUTHORIZED',
-    //       message: 'Unauthorized Exception',
-    //     },
-    //     HttpStatus.UNAUTHORIZED,
-    //   );
-    // }
+    let findServiceToData;
 
-    // //validamos si el servicio no existe o esta inactivo
-    // const findSU = await this.suModel.findById(id);
+    //validamos si el servicio no existe o esta inactivo
+    const findSU = await this.suModel.findOne({
+      where: {
+        id,
+      },
+    });
 
-    // if (!findSU) {
-    //   throw new HttpException(
-    //     {
-    //       status: HttpStatus.BAD_REQUEST,
-    //       type: 'BAD_REQUEST',
-    //       message: `El servicio no existe o esta inactivo.`,
-    //     },
-    //     HttpStatus.BAD_REQUEST,
-    //   );
-    // }
+    if (!findSU) {
+      throw new HttpException(
+        'El servicio no existe o esta inactivo',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
 
-    // //ejecutar codigo si existe usuario en el body
-    // if (user) {
-    //   let isExistsUserinSU;
+    let isExistsUserinSU;
+    //ejecutar codigo si existe usuario en el body
+    if (user) {
+      try {
+        //buscar servicio existente por usuario
+        isExistsUserinSU = await this.suModel.findOne({
+          where: {
+            user: {
+              id: user,
+            },
+          },
+        });
+      } catch (e) {
+        throw new HttpException(
+          {
+            status: HttpStatus.BAD_REQUEST,
+            type: 'BAD_REQUEST',
+            message: `No hay un servicio registrado con ese usuario.`,
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
 
-    //   try {
-    //     //buscar servicio existente por usuario
-    //     isExistsUserinSU = await this.suModel.findOne({ user });
-    //   } catch (e) {
-    //     throw new HttpException(
-    //       {
-    //         status: HttpStatus.BAD_REQUEST,
-    //         type: 'BAD_REQUEST',
-    //         message: `No hay un servicio registrado con ese usuario.`,
-    //       },
-    //       HttpStatus.BAD_REQUEST,
-    //     );
-    //   }
+      //si existe en la bd pero no coincide con el param id
+      if (id !== isExistsUserinSU.id) {
+        throw new HttpException(
+          'El id no coincide con el usuario ingresado',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+    }
 
-    //   //si existe en la bd pero no coincide con el param id
-    //   if (String(id) !== String(isExistsUserinSU._id)) {
-    //     throw new HttpException(
-    //       {
-    //         status: HttpStatus.BAD_REQUEST,
-    //         type: 'BAD_REQUEST',
-    //         message: `El id no coincide con el usuario ingresado.`,
-    //       },
-    //       HttpStatus.BAD_REQUEST,
-    //     );
-    //   }
-    // }
+    const findModules = await this.moduloRepository.find({
+      where: {
+        id: In(modulos),
+      },
+    });
 
-    // const arrayToString: string[] = Object.keys(modulesBody).map(
-    //   (mod) => modulesBody[mod],
-    // );
-    // const findModules = await this.moduleService.findModulesIds(arrayToString);
-    // const isExisteModuleASP = findModules.some(
-    //   (a) => a.name === 'Administración de sistema - PRINCIPAL',
-    // );
+    const isExisteModuleASP = findModules.some(
+      (a) => a.nombre === MOD_PRINCIPAL,
+    );
 
-    // if (isExisteModuleASP) {
-    //   throw new HttpException(
-    //     {
-    //       status: HttpStatus.UNAUTHORIZED,
-    //       type: 'UNAUTHORIZED',
-    //       message: `Unauthorized Exception`,
-    //     },
-    //     HttpStatus.UNAUTHORIZED,
-    //   );
-    // }
+    if (isExisteModuleASP) {
+      throw new HttpException(
+        'Por seguridad tomares tu ip',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
 
-    // //si no existe buscar su mismo usuario y serivicio registrado
-    // const { user: userRegistered, module: servicesRegistered } = findSU;
+    //si no existe buscar su mismo usuario y serivicio registrado
+    const { user: userRegistered, modulos: servicesRegistered } = findSU;
 
-    // //si existe servicios en el body, buscar los ids
-    // if (modulesBody) {
-    //   const servicesInput: string[] = Object.keys(modulesBody).map(
-    //     (res) => modulesBody[res],
-    //   );
+    //si existe servicios en el body, buscar los ids
+    if (modulos.length > 0) {
+      findServiceToData = await this.moduloRepository.find({
+        where: {
+          id: In(modulos),
+        },
+      });
+    }
 
-    //   findServiceToData = await this.moduleService.findModulesIds(
-    //     servicesInput,
-    //   );
-    // }
+    //si no existe servicios ni usuario en el body usar los mismo registrados
+    const modifyData = {
+      ...bodySU,
+      user: user ? (isExistsUserinSU as UserEntity) : userRegistered,
+      //modulos: modulos ? findServiceToData : servicesRegistered,
+    };
 
-    // //si no existe servicios ni usuario en el body usar los mismo registrados
-    // const modifyData: Services_User = {
-    //   ...bodySU,
-    //   user: user ? user : userRegistered,
-    //   module: modulesBody ? findServiceToData : servicesRegistered,
-    // };
+    //lo formateo para poder hacer la consulta con los registrado
+    // const formatRegistered = servicesRegistered.map((res) => res.id);
+    // const formatSendData = findServiceToData.map((res) => res.id);
 
-    // //lo formateo para poder hacer la consulta con los registrado
-    // const formatRegistered = servicesRegistered.map((res) => String(res));
-    // const formatSendData = findServiceToData.map((res) => String(res._id));
+    //validamos si ya existe el recurso modificado en el esquema copyresource_user
+    const isExistServicesModified = await this.copySuModel.findOne({
+      where: {
+        user: {
+          id: modifyData.user.id,
+        },
+      },
+    });
 
-    // //validamos si ya existe el recurso modificado en el esquema copyresource_user
-    // const isExistServicesModified = await this.copySuModel.findOne({
-    //   user: modifyData.user,
-    // });
-
-    // let enviarModificados = [];
+    let enviarModificados = [];
 
     // //si modificados esta vacio o no se encuentra en la bd se crea
-    // if (!isExistServicesModified) {
-    //   const desactivando = formatRegistered.filter(
-    //     (a) => !formatSendData.includes(a),
-    //   );
+    //  if (!isExistServicesModified) {
+    //    const desactivando = formatRegistered.filter(
+    //      (a) => !formatSendData.includes(a),
+    //    );
     //   const activando = formatSendData.filter(
     //     (a) => !formatRegistered.includes(a),
     //   );
